@@ -55,11 +55,11 @@ class WebUtils:
         try:
             releases_update_only = Config().get_config("app").get("releases_update_only")
             version_res = RequestUtils(proxies=Config().get_proxies()).get_res(
-                f"https://nastool.cn/{quote(WebUtils.get_current_version())}/update")
+                f"https://api.github.com/repos/niumeng07/nas-tools/releases/latest")
             if version_res:
                 ver_json = version_res.json()
-                version = ver_json.get("latest")
-                link = ver_json.get("link")
+                version = ver_json.get("tag_name")
+                link = ver_json.get("html_url")
                 if version and releases_update_only:
                     version = version.split()[0]
                 return version, link

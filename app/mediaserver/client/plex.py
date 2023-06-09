@@ -372,6 +372,7 @@ class Plex(_IMediaClient):
             })
         return libraries
 
+
     @lru_cache(maxsize=10)
     def get_libraries_image(self, library_key, type):
         """
@@ -388,11 +389,18 @@ class Plex(_IMediaClient):
         # 需要的总条数/每页的条数
         total_size = 4
 
+        def get_recently_items(type):
+            if type == 1:  # 电影
+                items = self._plex.library.fetchItems('/library/recentlyAdded')
+            else:
+                items = self._plex.fetchItems(f"/hubs/home/recentlyAdded?type={type}&sectionID={library_key}", # 对于电影1,3 对于电视2,8
+                                              container_size=total_size,
+                                              container_start=container_start)
+            return items
+
         # 如果总数不足,接续获取下一页
         while len(poster_urls) < total_size:
-            items = self._plex.fetchItems(f"/hubs/home/recentlyAdded?type={type}&sectionID={library_key}",
-                                          container_size=total_size,
-                                          container_start=container_start)
+            items = get_recently_items(type)   # 电影接口有问题,不区分类别
             for item in items:
                 if item.type == 'episode':
                     # 如果是剧集的单集,则去找上级的图片
