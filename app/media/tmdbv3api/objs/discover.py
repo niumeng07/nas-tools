@@ -1,4 +1,5 @@
 from app.media.tmdbv3api.tmdb import TMDb
+import log
 
 try:
     from urllib import urlencode

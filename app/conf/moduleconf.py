@@ -841,7 +841,7 @@ class ModuleConf(object):
                             {'value': 'ru', 'name': '俄语'},
                             {'value': 'hi', 'name': '印地语'}]
             },
-            "with_date_from": {
+            "primary_release_date.gte": {
                 "name": "开始时间",
                 "type": "dropdown",
                 "options": [{'value': '', 'name': '全部'},
@@ -856,7 +856,7 @@ class ModuleConf(object):
                             {'value': '2022', 'name': '2022'},
                             {'value': '2023', 'name': '2023'}]
             },
-            "with_date_to": {
+            "primary_release_date.lte": {
                 "name": "截止时间",
                 "type": "dropdown",
                 "options": [{'value': '', 'name': '全部'},
@@ -909,7 +909,7 @@ class ModuleConf(object):
                             {'value': 'ru', 'name': '俄语'},
                             {'value': 'hi', 'name': '印地语'}]
             },
-            "with_date_from": {
+            "first_air_date.gte": {
                 "name": "开始时间",
                 "type": "dropdown",
                 "options": [{'value': '', 'name': '全部'},
@@ -924,7 +924,7 @@ class ModuleConf(object):
                             {'value': '2022', 'name': '2022'},
                             {'value': '2023', 'name': '2023'}]
             },
-            "with_date_to": {
+            "first_air_date.lte": {
                 "name": "截止时间",
                 "type": "dropdown",
                 "options": [{'value': '', 'name': '全部'},

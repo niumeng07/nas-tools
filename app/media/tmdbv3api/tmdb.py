@@ -7,6 +7,7 @@ from functools import lru_cache
 
 import requests
 import requests.exceptions
+import log
 
 from .as_obj import AsObj
 from .exceptions import TMDbException
@@ -138,12 +139,11 @@ class TMDb(object):
         return self.cached_request.cache_clear()
 
     def _call(
-            self, action, append_to_response, call_cached=True, method="GET", data=None
-    ):
+            self, action, append_to_response, call_cached=True, method="GET", data=None):
         if self.api_key is None or self.api_key == "":
             raise TMDbException("No API key found.")
 
-        url = "%s%s?api_key=%s&include_adult=false&%s&language=%s" % (
+        url = "%s%s?api_key=%s&include_adult=true&%s&language=%s" % (
             self.domain,
             action,
             self.api_key,
