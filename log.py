@@ -9,6 +9,10 @@ from logging.handlers import RotatingFileHandler
 
 from config import Config
 
+
+FORMAT = '%(asctime)s %(filename)s %(lineno)d %(message)s'
+logging.basicConfig(format=FORMAT)
+
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 lock = threading.Lock()
 
