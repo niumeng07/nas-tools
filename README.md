@@ -5,18 +5,14 @@
 [![GitHub forks](https://img.shields.io/github/forks/niumeng07/nas-tools?style=plastic)](https://github.com/niumeng07/nas-tools/network/members)
 [![GitHub issues](https://img.shields.io/github/issues/niumeng07/nas-tools?style=plastic)](https://github.com/niumeng07/nas-tools/issues)
 [![GitHub license](https://img.shields.io/github/license/niumeng07/nas-tools?style=plastic)](https://github.com/niumeng07/nas-tools/blob/master/LICENSE.md)
-[![Docker pulls](https://img.shields.io/docker/pulls/jxxghp/nas-tools?style=plastic)](https://hub.docker.com/r/jxxghp/nas-tools)
-[![Platform](https://img.shields.io/badge/platform-amd64/arm64-pink?style=plastic)](https://hub.docker.com/r/jxxghp/nas-tools)
+[![Docker pulls](https://img.shields.io/docker/pulls/niumeng07/nas-tools?style=plastic)](https://hub.docker.com/r/niumeng07/nas-tools)
+[![Platform](https://img.shields.io/badge/platform-amd64/arm64-pink?style=plastic)](https://hub.docker.com/r/niumeng07/nas-tools)
 
 
 Docker：
-* https://hub.docker.com/r/jxxghp/nas-tools 
-* https://hub.docker.com/r/nastool/nas-tools
+* https://hub.docker.com/r/niumeng07/nas-tools 
 
-TG频道：https://t.me/nastool_official
-
-Wiki：https://wiki.nastool.cn
-
+TG频道：
 API: http://localhost:3000/api/v1/
 
 
@@ -28,7 +24,7 @@ NAS媒体库管理工具。
 ## 安装
 ### 1、Docker
 ```
-docker pull jxxghp/nas-tools:latest
+docker pull niumeng07/nas-tools:latest
 ```
 教程见 [这里](docker/readme.md) 。
 

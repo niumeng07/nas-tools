@@ -25,9 +25,9 @@ class CookieCloud(_IPluginModule):
     # 插件版本
     module_version = "1.0"
     # 插件作者
-    module_author = "jxxghp"
+    module_author = "niumeng07"
     # 作者主页
-    author_url = "https://github.com/jxxghp"
+    author_url = "https://github.com/niumeng07"
     # 插件配置项ID前缀
     module_config_prefix = "cookiecloud_"
     # 加载顺序
