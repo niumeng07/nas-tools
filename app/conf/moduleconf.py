@@ -1023,6 +1023,8 @@ class ModuleConf(object):
                 "name": "类型",
                 "type": "dropdown",
                 "options": [{"value": "", "name": "全部"},
+                            {"value": "", "name": "全部剧集"},
+                            {"value": "", "name": "全部综艺"},
                             {"value": "喜剧", "name": "喜剧"},
                             {"value": "爱情", "name": "爱情"},
                             {"value": "动作", "name": "动作"},
@@ -1036,7 +1038,12 @@ class ModuleConf(object):
                             {"value": "恐怖", "name": "恐怖"},
                             {"value": "战争", "name": "战争"},
                             {"value": "武侠", "name": "武侠"},
-                            {"value": "灾难", "name": "灾难"}]
+                            {"value": "灾难", "name": "灾难"},
+                            {"value": "灾难", "name": "真人秀"},
+                            {"value": "灾难", "name": "脱口秀"},
+                            {"value": "灾难", "name": "音乐"},
+                            {"value": "灾难", "name": "歌舞"}
+                            ]
             },
             "region": {
                 "name": "地区",
