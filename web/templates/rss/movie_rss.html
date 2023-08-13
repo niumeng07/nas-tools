@@ -17,6 +17,13 @@
           <a href="javascript:show_add_rss_media_modal('MOV')" class="btn btn-primary d-sm-none btn-icon">
             {{ SVG.plus() }}
           </a>
+          <a href="javascript:show_default_rss_setting_modal('MOV')" class="btn btn-twitter d-none d-sm-inline-block">
+            {{ SVG.server_2() }}
+            默认设置
+          </a>
+          <a href="javascript:show_default_rss_setting_modal('MOV')" class="btn btn-twitter d-sm-none btn-icon">
+            {{ SVG.server_2() }}
+          </a>
           <a href="javascript:navmenu('rss_history?t=MOV')" class="btn d-none d-sm-inline-block">
             {{ SVG.history() }}
             订阅历史
@@ -32,15 +39,15 @@
 {% if Count > 0 %}
   <div class="page-body">
     <div class="container-xl">
-      <div class="d-grid gap-3 grid-normal-card">
+      <div class="d-grid gap-3 grid-normal-card align-items-start">
         {% for Id, Attr in Items.items() %}
-          <a class="card card-link-pop rounded-3 p-0"
+          <a class="card card-link-pop overflow-hidden rounded-3 p-0"
              href='javascript:{% if Attr.tmdbid %}show_mediainfo_modal("MOV", "{{ Attr.name }}", "{{ Attr.year }}", "{{ Attr.tmdbid }}", "movie_rss", "{{ Attr.id }}"){% else %}show_edit_rss_media_modal("{{ Attr.id }}", "MOV"){% endif %}'>
             <div class="text-center" style="overflow:hidden">
-              <custom-img img-class="rounded-top w-100"
+              <custom-img img-class="w-100"
                           img-src="{{ Attr.image }}"
                           img-ratio="60%"
-                          img-style="border-top-left-radius:var(--tblr-border-radius-lg) !important; border-top-right-radius:var(--tblr-border-radius-lg) !important; object-fit:cover;"
+                          img-style="object-fit: cover;"
               ></custom-img>
             </div>
             <div class="card-body text-center">
@@ -72,10 +79,10 @@
               {% else %} class=“text-muted"{% endif %}>
                 <small>
                   {% if Attr.over_edition %}
-                    <span class="badge bg-red me-1 mb-1" title="已开启洗版">洗版</span>
+                    <span class="badge me-1 mb-1" title="已开启洗版">洗版</span>
                   {% endif %}
                   {% if Attr.download_setting|string in DownloadSettings %}
-                    <span class="badge bg-red me-1 mb-1" title="下载设置">
+                    <span class="badge me-1 mb-1" title="下载设置">
                       {{ DownloadSettings[Attr.download_setting|string].name }}
                     </span>
                   {% endif %}
@@ -90,13 +97,23 @@
                     </span>
                   {% endif %}
                   {% if Attr.filter_team %}
-                    <span class="badge bg-yellow me-1 mb-1 text-wrap text-start" title="制作组/字幕组">
+                    <span class="badge bg-cyan me-1 mb-1 text-wrap text-start" title="制作组/字幕组">
                       {{ Attr.filter_team }}
                     </span>
                   {% endif %}
                   {% if Attr.filter_rule|string in RuleGroups %}
                     <span class="badge bg-orange me-1 mb-1" title="过滤规则">
                       {{ RuleGroups[Attr.filter_rule|string] }}
+                    </span>
+                  {% endif %}
+                  {% if Attr.filter_include %}
+                    <span class="badge bg-green me-1 mb-1 text-wrap text-start" title="包含">
+                      {{ Attr.filter_include }}
+                    </span>
+                  {% endif %}
+                  {% if Attr.filter_exclude %}
+                    <span class="badge bg-red me-1 mb-1 text-wrap text-start" title="排除">
+                      {{ Attr.filter_exclude }}
                     </span>
                   {% endif %}
                 </small>

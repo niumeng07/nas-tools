@@ -24,8 +24,8 @@
             <button class="dropdown-item" onclick="show_torrent_download_modal('torrent')">
               种子文件
             </button>
-            <button class="dropdown-item" onclick="show_torrent_download_modal('magnet')">
-              磁力链接
+            <button class="dropdown-item" onclick="show_torrent_download_modal('url')">
+              种子链接
             </button>
           </div>
         </div>
@@ -38,12 +38,12 @@
     <div class="container-xl">
       <div class="d-grid gap-3 grid-info-card">
         {% for Torrent in Torrents %}
-          <div class="card">
+          <div class="card p-0">
             <div class="card-body">
               <div class="row align-items-center">
                 {% if Torrent.image %}
-                  <div class="col-3">
-                    <img src="{{ Torrent.image }}" class="rounded" alt="">
+                  <div class="col-auto p-0">
+                    <img src="{{ Torrent.image }}" class="rounded" alt="" style="max-width: 80px;">
                   </div>
                 {% endif %}
                 <div class="col">
@@ -73,21 +73,19 @@
                     </div>
                   {% endif %}
                 </div>
-                <div class="col-auto">
+                <div class="col-auto p-0">
                   <div class="dropdown">
                     {% if not Torrent.nomenu %}
                       <a href="#" class="btn-action" data-bs-toggle="dropdown" aria-expanded="false">
                         {{ SVG.dots_vertical() }}
                       </a>
                       <div class="dropdown-menu dropdown-menu-end">
-                        {% if Client != 'client115' %}
-                          <a href="javascript:start_pt_download('{{ Torrent.id }}')" id="start_btn_{{ Torrent.id }}"
-                            class="dropdown-item"
-                            style="{% if Torrent.state == 'Downloading' %}display:none{% endif %}">开始</a>
-                          <a href="javascript:stop_pt_download('{{ Torrent.id }}')" id="stop_btn_{{ Torrent.id }}"
-                            class="dropdown-item"
-                            style="{% if Torrent.state == 'Stoped' %}display:none{% endif %}">暂停</a>
-                        {% endif %}
+                        <a href="javascript:start_pt_download('{{ Torrent.id }}')" id="start_btn_{{ Torrent.id }}"
+                          class="dropdown-item"
+                          style="{% if Torrent.state == 'Downloading' %}display:none{% endif %}">开始</a>
+                        <a href="javascript:stop_pt_download('{{ Torrent.id }}')" id="stop_btn_{{ Torrent.id }}"
+                          class="dropdown-item"
+                          style="{% if Torrent.state == 'Stoped' %}display:none{% endif %}">暂停</a>
                         <a href="javascript:remove_pt_download('{{ Torrent.id }}')"
                           class="dropdown-item text-danger">删除</a>
                       </div>
@@ -173,23 +171,23 @@
   //显示新增下载界面
   function show_torrent_download_modal(type) {
     show_download_modal('', '', '', function(){
-      let magnet = $("#torrent_magnets").val();
-      if (!torrent_dropzone || !torrent_dropzone.files || !torrent_dropzone.files[0] && !magnet) {
+      let urls = $("#torrent_urls").val();
+      if ((!TorrentDropZone || !TorrentDropZone.files || !TorrentDropZone.files[0]) && !urls) {
         return;
       }
       $("#search_download_btn").text("处理中...").attr("disabled", true);
       const params = {
-        "files": torrent_dropzone.files,
-        "magnets": magnet.split("\n"),
-        "dl_dir": $("#search_download_dir").val(),
+        "files": TorrentDropZone.files,
+        "urls": urls.split("\n"),
+        "dl_dir": get_savepath("search_download_dir", "search_download_dir_manual"),
         "dl_setting": $("#search_download_setting").val()
       }
       ajax_post("download_torrent", params, function (ret) {
         $("#search_download_btn").attr("disabled", false).text("下载");
         $("#modal-search-download").modal('hide');
         if (ret.code == 0) {
-          torrent_dropzone.removeAllFiles();
-          $("#torrent_magnets").val("");
+          TorrentDropZone.removeAllFiles();
+          $("#torrent_urls").val("");
           window_history_refresh();
         } else {
           show_fail_modal(`添加下载失败：${ret.msg}`, function() {

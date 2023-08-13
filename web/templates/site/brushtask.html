@@ -18,12 +18,19 @@
           <a href="javascript:show_brushtask_modal()" class="btn btn-primary d-sm-none btn-icon">
             {{ SVG.plus() }}
           </a>
-          <a href="javascript:navmenu('userdownloader')" class="btn d-none d-sm-inline-block" title="自定义下载器">
-            {{ SVG.apps() }}
-            自定义下载器
+          <a href="javascript:update_brushtask_state('Y')" class="btn btn-success ms-auto d-none d-sm-inline-block">
+            {{ SVG.player_play() }}
+            启动
           </a>
-          <a href="javascript:navmenu('userdownloader')" class="btn d-sm-none btn-icon" title="自定义下载器">
-            {{ SVG.apps() }}
+          <a href="javascript:update_brushtask_state('Y')" class="btn btn-success d-sm-none btn-icon">
+            {{ SVG.player_play() }}
+          </a>
+          <a href="javascript:update_brushtask_state('N')" class="btn btn-secondary ms-auto d-none d-sm-inline-block">
+            {{ SVG.player_stop() }}
+            停止
+          </a>
+          <a href="javascript:update_brushtask_state('N')" class="btn btn-secondary d-sm-none btn-icon">
+            {{ SVG.player_stop() }}
           </a>
         </div>
       </div>
@@ -37,17 +44,19 @@
         {% for Task in Tasks %}
           <div class="card">
             <div class="card-header">
-              <a href="javascript:show_brushtask_detail('{{ Task.id }}')"
-                 title="展开/折叠" data-bs-toggle="tooltip">
-                <div>
-                  {% if Task.state == 'Y' %}
-                  <span class="badge bg-green"></span>
-                  {% else %}
-                  <span class="badge bg-red"></span>
-                  {% endif %}
-                </div>
-              </a>
-              <a href="javascript:show_brushtask_detail('{{ Task.id }}')" style="text-decoration-line: none; color: unset"
+              <div>
+                <input class="form-check-input m-0 align-middle" name="burshtask" value="{{ Task.id }}" type="checkbox">
+              </div>
+              <div>
+                {% if Task.state == 'Y' %}
+                <span class="badge bg-green ms-3"></span>
+                {% elif Task.state == 'S' %}
+                <span class="badge bg-orange ms-3"></span>
+                {% else %}
+                <span class="badge bg-red ms-3"></span>
+                {% endif %}
+              </div>
+              <a href="javascript:void(0)" onclick="show_brushtask_detail('{{ Task.id }}')" style="text-decoration-line: none; color: unset"
                  title="展开/折叠" data-bs-toggle="tooltip">
                 <div class="ms-3">
                   <h3 class="card-title">{{ Task.name }}</h3>
@@ -79,20 +88,20 @@
                 </button>
               </div>
               <div class="card-actions btn-actions d-none d-sm-block">
-                <a href="javascript:show_brushtask_detail('{{ Task.id }}')" class="btn-action"
-                   title="展开/折叠" data-bs-toggle="tooltip">
+                <a href="javascript:void(0)" onclick="show_brushtask_detail('{{ Task.id }}')" class="btn-action"
+                   title="展开/折叠">
                   {{ SVG.menu_2() }}
                 </a>
                 <a href="javascript:show_brushtask_torrents_modal('{{ Task.id }}')" class="btn-action"
-                   title="查看种子明细" data-bs-toggle="tooltip">
+                   title="查看种子明细">
                   {{ SVG.eye() }}
                 </a>
                 <a href="javascript:edit_brushtask_modal('{{ Task.id }}')" class="btn-action"
-                  title="编辑任务" data-bs-toggle="tooltip">
+                  title="编辑任务">
                   {{ SVG.edit() }}
                 </a>
                 <a href="javascript:del_brushtask_modal('{{ Task.id }}', '{{ Task.name }}')" class="btn-action"
-                   title="删除任务" data-bs-toggle="tooltip">
+                   title="删除任务">
                   {{ SVG.x() }}
                 </a>
               </div>
@@ -105,16 +114,16 @@
                   <div class="datagrid-content">
                     <div class="d-flex align-items-center">
                       <span class="avatar avatar-sm rounded me-2 siteicon-{{ Task.site|hash }}" width="24" height="24" alt="" style="cursor:pointer"></span>
-                      <h3>{{ Task.site }}</h3>
+                      <h3 class="mb-0">{{ Task.site }}</h3>
                     </div>
                   </div>
                 </div>
                 <div class="datagrid-item">
                   <div class="datagrid-title">促销</div>
                   <div class="datagrid-content">
-                    {% if Task.free %}<span class="badge me-2 bg-green">{{ Task.free }}</span>
+                    {% if Task.free %}<span class="badge bg-green">{{ Task.free }}</span>
                     {% else %}
-                      <span class="badge me-2 bg-orange">全部</span>
+                      <span class="badge bg-orange">全部</span>
                     {% endif %}
                   </div>
                 </div>
@@ -141,11 +150,17 @@
                 <div class="datagrid-item">
                   <div class="datagrid-title">保种体积</div>
                   <div class="datagrid-content">
-                    {% if Task.seed_size %}{{ Task.seed_size }} GB{% else %}无限制{% endif %}</div>
+                    {% if Task.seed_size %}{{ Task.total_size }} GB / {{ Task.seed_size }} GB{% else %}无限制{% endif %}</div>
                 </div>
                 <div class="datagrid-item">
                   <div class="datagrid-title">刷新间隔</div>
-                  <div class="datagrid-content">{{ Task.interval }} 分钟</div>
+                  <div class="datagrid-content">
+                  {% if Task.interval.isdigit() %}
+                    {{ Task.interval }} 分钟
+                  {% else %}
+                    {{ Task.interval }}
+                  {% endif %}
+                  </div>
                 </div>
                 <div class="datagrid-item">
                   <div class="datagrid-title">下载器</div>
@@ -154,17 +169,7 @@
                 <div class="datagrid-item">
                   <div class="datagrid-title">消息推送</div>
                   <div class="datagrid-content">
-                    {% if Task.sendmessage == 'Y' %}
-                      <span class="status status-green">开</span>
-                    {% else %}
-                      <span class="status status-red">关</span>
-                    {% endif %}
-                  </div>
-                </div>
-                <div class="datagrid-item">
-                  <div class="datagrid-title">强制做种</div>
-                  <div class="datagrid-content">
-                    {% if Task.forceupload == 'Y' %}
+                    {% if Task.sendmessage %}
                       <span class="status status-green">开</span>
                     {% else %}
                       <span class="status status-red">关</span>
@@ -174,7 +179,7 @@
                 <div class="datagrid-item">
                   <div class="datagrid-title">转移到媒体库</div>
                   <div class="datagrid-content">
-                    {% if Task.transfer == 'Y' %}
+                    {% if Task.transfer %}
                       <span class="status status-green">开</span>
                     {% else %}
                       <span class="status status-red">关</span>
@@ -204,12 +209,28 @@
                   </div>
                 </div>
                 <div class="datagrid-item">
+                  <div class="datagrid-title">标签</div>
+                  <div class="datagrid-content">
+                    {% if Task.label %}
+                    <span class="badge">{{ Task.label }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="datagrid-item">
+                  <div class="datagrid-title">保存目录</div>
+                  <div class="datagrid-content">
+                    {{ Task.savepath or ''}}
+                  </div>
+                </div>
+                <div class="datagrid-item">
                   <div class="datagrid-title">状态</div>
                   <div class="datagrid-content">
                     {% if Task.state == 'Y' %}
-                      <span class="badge me-2 bg-green">正在运行</span>
+                      <span class="badge bg-green">正在运行</span>
+                    {% elif Task.state == 'S' %}
+                      <span class="badge bg-orange">停止下载新种</span>
                     {% else %}
-                      <span class="badge me-2 bg-red">已停用</span>
+                      <span class="badge bg-red">已停用</span>
                     {% endif %}
                   </div>
                 </div>
@@ -253,10 +274,10 @@
           </div>
           <div class="col-lg-4">
             <div class="mb-3">
-              <label class="form-label required">刷新间隔(分钟) <span class="form-help"
-                                                                      title="检查站点RSS更新的间隔时间，为了减小站点压力，建议不小于5分钟"
+              <label class="form-label required">执行周期 <span class="form-help"
+                                                                      title="检查站点RSS更新的周期，为了减小站点压力，建议不小于5分钟，支持两种配置方式：1、间隔时间（分钟），如 10；2、5位cron表达式,如：*/30 * * * *（对应：分 时 日 月 星期）"
                                                                       data-bs-toggle="tooltip">?</span></label>
-              <input type="text" id="brushtask_interval" class="form-control" placeholder="10">
+              <input type="text" id="brushtask_interval" class="form-control" placeholder="10 或 */10 * * * *">
             </div>
           </div>
         </div>
@@ -264,11 +285,11 @@
           <div class="col-lg-4">
             <div class="mb-3">
               <label class="form-label required">下载器 <span class="form-help"
-                                                              title="选择刷流任务使用的下载器，在自定义下载器中添加，如需识别转移到媒体库，需与正在使用的下载器相同"
+                                                              title="选择刷流任务使用的下载器，在设置-下载器中添加，如需识别转移到媒体库，所选下载器也需启用监控功能"
                                                               data-bs-toggle="tooltip">?</span></label>
               <select class="form-select" id="brushtask_downloader">
                 <option value="" selected>请选择</option>
-                {% for downloader in Downloaders %}
+                {% for downloader in Downloaders.values() %}
                   <option value="{{ downloader.id }}">{{ downloader.name }}</option>
                 {% endfor %}
               </select>
@@ -277,7 +298,7 @@
           <div class="col-lg-4">
             <div class="mb-3">
               <label class="form-label">保种体积(GB) <span class="form-help"
-                                                           title="该任务所有下载任务的保种体积超过设定值时不再新增下载"
+                                                           title="该任务所有下载任务的保种体积超过设定值时不再新增下载，冗余量5GB，即实际最多超过设定保种体积5GB"
                                                            data-bs-toggle="tooltip">?</span></label>
               <input type="text" id="brushtask_totalsize" class="form-control" placeholder="">
             </div>
@@ -287,8 +308,37 @@
               <label class="form-label required">状态</label>
               <select class="form-select" id="brushtask_state">
                 <option value="Y">正常</option>
-                <option value="N">暂停</option>
+                <option value="S">停止下载新种</option>
+                <option value="N">停用</option>
               </select>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="mb-3">
+              <label class="form-label">标签 <span class="form-help"
+                                                           title="用户在下载器中标记该任务的种子，多个标签使用,分隔"
+                                                           data-bs-toggle="tooltip">?</span></label>
+              <input type="text" id="brushtask_label" class="form-control" placeholder="多个标签使用,分隔">
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="mb-3">
+              <label class="form-label">保存目录 <span class="form-help"
+                                                           title="为该刷新任务设置独立的保存目录，将会覆盖下载器中的目录设置，如果下载器为Qbittorrent还需要在NAStool下载器设置中关闭种子自动管理功能"
+                                                           data-bs-toggle="tooltip">?</span></label>
+              <input type="text" id="brushtask_savepath" class="form-control" placeholder="留空使用下载器设置">
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg">
+            <div class="mb-3">
+              <label class="form-label">RSS地址 <span class="form-help"
+                                                           title="刷流优先使用此处填入的站点RSS，若为空则使用站点配置RSS地址"
+                                                           data-bs-toggle="tooltip">?</span></label>
+              <input type="text" id="brushtask_rssurl" class="form-control" placeholder="站点RSS订阅URL，若为空则使用站点配置RSS地址">
             </div>
           </div>
         </div>
@@ -305,16 +355,6 @@
           <div class="col-lg-4">
             <div class="mb-3">
               <label class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="brushtask_forceupload">
-                <span class="form-check-label">强制做种 <span class="form-help"
-                                                              title="开启后当前任务的新增下载将设置为强制下载/做种状态"
-                                                              data-bs-toggle="tooltip">?</span></span>
-              </label>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="mb-3">
-              <label class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="brushtask_transfer">
                 <span class="form-check-label">转移到媒体库 <span class="form-help"
                                                                   title="开启后刷流的下载也会进行转移并识别重命名到媒体库"
@@ -323,7 +363,7 @@
             </div>
           </div>
         </div>
-        <div class="hr-text hr-text-center hr-text-spaceless mt-1 mb-3">选种规则</div>
+        <div class="hr-text hr-text-center hr-text-spaceless mt-1 mb-3">选种规则（与）</div>
         <div class="row">
           <div class="col-lg-4">
             <div class="mb-3">
@@ -453,7 +493,7 @@
           <div class="col-lg-4">
             <div class="mb-3">
               <label class="form-label">发布时间（小时） <span class="form-help"
-                                                             title="种子的发布时间在选定范围内时才会下载"
+                                                             title="种子的发布时间在选定范围内时才会下载，介于时使用英文逗号,分隔两个值，比较值时均包括边界值本身"
                                                              data-bs-toggle="tooltip">?</span></label>
               <div class="input-group">
                 <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -466,9 +506,17 @@
                      onclick="filter_item_change('', 'brushtask_pubdate',$(this))">
                     全部
                   </a>
+                  <a class="dropdown-item" id="brushtask_pubdate_do_gt" href="javascript:void(0)"
+                     onclick="filter_item_change('gt', 'brushtask_pubdate',$(this))">
+                    大于
+                  </a>
                   <a class="dropdown-item" id="brushtask_pubdate_do_lt" href="javascript:void(0)"
                      onclick="filter_item_change('lt', 'brushtask_pubdate',$(this))">
                     小于
+                  </a>
+                  <a class="dropdown-item" id="brushtask_pubdate_do_bw" href="javascript:void(0)"
+                     onclick="filter_item_change('bw', 'brushtask_pubdate',$(this))">
+                    介于
                   </a>
                 </div>
                 <input type="text" id="brushtask_pubdate" class="form-control" placeholder="" readonly/>
@@ -476,7 +524,7 @@
             </div>
           </div>
         </div>
-        <div class="hr-text hr-text-center hr-text-spaceless mt-1 mb-3">删种规则</div>
+        <div class="hr-text hr-text-center hr-text-spaceless mt-1 mb-3">删种规则（或）</div>
         <div class="row">
           <div class="col-lg-4">
             <div class="mb-3">
@@ -504,7 +552,7 @@
           </div>
           <div class="col-lg-4">
             <div class="mb-3">
-              <label class="form-label">分享率 <span class="form-help" title="分享率超过设定值时会删除下载任务"
+              <label class="form-label">分享率 <span class="form-help" title="分享率超过设定值时会删除下载任务（分享率为上传量与种子大小的比值）"
                                                      data-bs-toggle="tooltip">?</span></label>
               <div class="input-group">
                 <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -640,7 +688,7 @@
         <h5 class="modal-title">刷流种子明细</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="table-responsive" style="overflow-y: auto; max-height: 35em;">
+      <div class="table-responsive table-modal-body">
         <table id="table-brushtask-torrents" class="table table-vcenter card-table table-hover table-striped">
         </table>
       </div>
@@ -675,31 +723,29 @@
         //赋值
         $("#brushtask_modal_title").text("编辑任务");
         $("#brushtask_name").val(ret.task.name);
-        $("#brushtask_site").val(ret.task.site);
-        brushtask_site_change(ret.task.site, ret.task.free, ret.task.rss_rule.hr);
+        $("#brushtask_site").val(ret.task.site_id);
+        brushtask_site_change(ret.task.site_id, ret.task.free, ret.task.rss_rule.hr);
         $("#brushtask_interval").val(ret.task.interval);
+        $("#brushtask_rssurl").val(ret.task.rss_url_show);
         $("#brushtask_downloader").val(ret.task.downloader);
         $("#brushtask_totalsize").val(ret.task.seed_size);
         $("#brushtask_state").val(ret.task.state);
-        if (ret.task.transfer == "Y") {
+        if (ret.task.transfer) {
           $("#brushtask_transfer").prop("checked", true);
         } else {
           $("#brushtask_transfer").prop("checked", false);
         }
-        if (ret.task.sendmessage == "Y") {
+        if (ret.task.sendmessage) {
           $("#brushtask_sendmessage").prop("checked", true);
         } else {
           $("#brushtask_sendmessage").prop("checked", false);
-        }
-        if (ret.task.forceupload == "Y") {
-          $("#brushtask_forceupload").prop("checked", true);
-        } else {
-          $("#brushtask_forceupload").prop("checked", false);
         }
         $("#brushtask_dlcount").val(ret.task.rss_rule.dlcount)
         $("#brushtask_peercount").val(ret.task.rss_rule.peercount)
         $("#brushtask_include").val(ret.task.rss_rule.include);
         $("#brushtask_exclude").val(ret.task.rss_rule.exclude);
+        $("#brushtask_label").val(ret.task.label);
+        $("#brushtask_savepath").val(ret.task.savepath);
         //种子大小
         if (ret.task.rss_rule.size) {
           let size_str = ret.task.rss_rule.size.split('#');
@@ -758,6 +804,14 @@
         //弹窗
         $("#modal-brushtask").modal('show');
       }
+    });
+  }
+
+  // 批量暂停启动刷流任务
+  function update_brushtask_state(state){
+    let ids = select_GetSelectedVAL("burshtask");
+    ajax_post("update_brushtask_state", {'state': state, ids:ids }, function (ret){
+      window_history_refresh();
     });
   }
 
@@ -835,7 +889,7 @@
       $("#brushtask_site").removeClass("is-invalid");
     }
     let brushtask_interval = $("#brushtask_interval").val();
-    if (!brushtask_interval || isNaN(brushtask_interval)) {
+    if (!brushtask_interval) {
       $("#brushtask_interval").addClass("is-invalid");
       return;
     } else {
@@ -853,10 +907,12 @@
       $("#brushtask_totalsize").addClass("is-invalid");
       return;
     }
+    let brushtask_rssurl = $("#brushtask_rssurl").val();
+    let brushtask_label = $("#brushtask_label").val();
+    let brushtask_savepath = $("#brushtask_savepath").val();
     let brushtask_state = $("#brushtask_state").val();
     let brushtask_transfer = $("#brushtask_transfer").prop('checked');
     let brushtask_sendmessage = $("#brushtask_sendmessage").prop('checked');
-    let brushtask_forceupload = $("#brushtask_forceupload").prop('checked');
     let brushtask_free = $("#brushtask_free").val();
     let brushtask_hr = $("#brushtask_hr").val();
     //种子大小
@@ -1020,12 +1076,14 @@
       brushtask_name: brushtask_name,
       brushtask_site: brushtask_site,
       brushtask_interval: brushtask_interval,
+      brushtask_rssurl: brushtask_rssurl,
       brushtask_downloader: brushtask_downloader,
       brushtask_totalsize: brushtask_totalsize,
+      brushtask_label: brushtask_label,
+      brushtask_savepath: brushtask_savepath,
       brushtask_state: brushtask_state,
       brushtask_transfer: brushtask_transfer,
       brushtask_sendmessage: brushtask_sendmessage,
-      brushtask_forceupload: brushtask_forceupload,
       brushtask_free: brushtask_free,
       brushtask_hr: brushtask_hr,
       brushtask_torrent_size: brushtask_torrent_size_do + "#" + brushtask_torrent_size,

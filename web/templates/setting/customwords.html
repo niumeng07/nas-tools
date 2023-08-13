@@ -14,22 +14,8 @@
             {{ SVG.plus() }}
             新增
           </a>
-          <a href="javascript:show_add_custom_word_group_modal()" class="btn btn-primary d-sm-none btn-icon">
+          <a href="javascript:show_add_custom_word_group_modal()" class="btn btn-twitter d-sm-none btn-icon">
             {{ SVG.plus() }}
-          </a>
-          <a href="javascript:batch_check_action('enable')" class="btn btn-success ms-auto d-none d-sm-inline-block">
-            {{ SVG.player_play() }}
-            启用
-          </a>
-          <a href="javascript:batch_check_action('enable')" class="btn btn-success d-sm-none btn-icon">
-            {{ SVG.player_play() }}
-          </a>
-          <a href="javascript:batch_check_action('disable')" class="btn btn-secondary ms-auto d-none d-sm-inline-block">
-            {{ SVG.player_stop() }}
-            停用
-          </a>
-          <a href="javascript:batch_check_action('disable')" class="btn btn-secondary d-sm-none btn-icon">
-            {{ SVG.player_stop() }}
           </a>
           <a href="javascript:show_import_custom_words_modal()"
             class="btn btn-twitter ms-auto d-none d-sm-inline-block">
@@ -39,18 +25,35 @@
           <a href="javascript:show_import_custom_words_modal()" class="btn btn-twitter d-sm-none btn-icon">
             {{ SVG.transfer_in() }}
           </a>
-          <a href="javascript:batch_check_action('export')" class="btn btn-info btn-twitter d-none d-sm-inline-block">
-            {{ SVG.transfer_out() }}
-            导出
-          </a>
-          <a href="javascript:batch_check_action('export')" class="btn btn-twitter d-sm-none btn-icon">
-            {{ SVG.transfer_out() }}
-          </a>
+          <div class="dropdown">
+            <a href="#" class="btn ms-auto d-none d-sm-inline-block dropdown-toggle"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              {{ SVG.menu_2() }}
+              批量管理
+            </a>
+            <a href="#" class="btn d-sm-none btn-icon"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              {{ SVG.menu_2() }}
+            </a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item text-mute" href="javascript:batch_check_action('enable')" >
+                启用
+              </a>
+              <a class="dropdown-item text-mute" href="javascript:batch_check_action('disable')">
+                停用
+              </a>
+              <a class="dropdown-item text-mute" href="javascript:batch_check_action('export')">
+                导出
+              </a>
+              <a class="dropdown-item text-danger" href="javascript:batch_check_action('delete')">
+                删除
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 </div>
 <!-- 业务页面代码 -->
 <div class="page-body">
@@ -64,7 +67,7 @@
               <h3 class="card-title"><strong>{{ Group.name }}</strong></h3>
             </a>
             <div class="card-actions btn-actions">
-              <a href="javascript:$('#div_group{{ Group.id }}').slideToggle()" class="btn-action ms-1" title="折叠">
+              <a href="javascript:void(0)" onclick="show_customwords_detail('{{ Group.id }}')" class="btn-action ms-1" title="折叠">
                 {{ SVG.menu_2() }}
               </a>
               <a href="javascript:show_add_custom_word_modal('{{ Group.id }}', {{ Group.type }}, {{ Group.seasons }})"
@@ -78,8 +81,7 @@
               {% endif %}
             </div>
           </div>
-          <div id="div_group{{ Group.id }}" class="table-responsive" {% if GroupsCount> 8 %}style="display: none;"{%
-            endif %}>
+          <div id="div_group{{ Group.id }}" class="table-responsive" {% if GroupsCount> 8 %}style="display: none;"{% endif %}>
             <table class="table table-vcenter card-table table-hover table-striped">
               <thead>
                 <tr>
@@ -87,7 +89,7 @@
                   <th class="w-1">
                     <input class="form-check-input m-0 align-middle" type="checkbox" aria-label="全选"
                            onclick="select_SelectALL($(this).prop('checked'), 'custom_words_{{ Group.id }}')">
-                 </th>
+                  </th>
                   {% endif %}
                   <th class="w-1"></th>
                   <th>被替换词</th>
@@ -113,7 +115,7 @@
                   <td>{{ Word.replace }}</td>
                   <td>
                     {% if Word.offset %}
-                    <span class="badge badge-outline text-cyan mb-1" style="vertical-align: middle;">{{ Word.offset
+                    <span class="badge badge-outline text-cyan" style="vertical-align: middle;">{{ Word.offset
                       }}</span>
                     {% endif %}
                   </td>
@@ -121,30 +123,27 @@
                   <td>{{ Word.back }}</td>
                   <td>
                     {% if Word.regex == 1 %}
-                    <span class="badge bg-blue mb-1" style="vertical-align: middle;">RegEx</span>
+                    <span class="badge bg-blue" style="vertical-align: middle;">RegEx</span>
                     {% endif %}
                   </td>
-                  <td>
+                  <td class="text-nowrap">
                     {% if Word.season != -2 %}
-                    {% if Word.season == -1 %}
-                    <span class="badge badge-outline text-orange me-1 mb-1" style="vertical-align: middle;">全部季</span>
-                    {% else %}
-                    <span class="badge badge-outline text-orange me-1 mb-1" style="vertical-align: middle;">第{{
-                      Word.season }}季</span>
-                    {% endif %}
+                      {% if Word.season == -1 %}
+                      <span class="badge badge-outline text-orange me-1" style="vertical-align: middle;">全部季</span>
+                      {% else %}
+                      <span class="badge badge-outline text-orange me-1" style="vertical-align: middle;">第{{
+                        Word.season }}季</span>
+                      {% endif %}
                     {% endif %}
                     {% if Word.help %}
-                    <span class="form-help" title="{{ Word.help }}" data-bs-toggle="tooltip">?</span>
+                      <span class="form-help" title="{{ Word.help }}" data-bs-toggle="tooltip">!</span>
                     {% endif %}
                   </td>
                   <td>
                     <div class="d-flex">
                       <a href="javascript:show_edit_custom_word_modal('{{ Word.id }}', '{{ Group.id }}', {{ Group.type }}, {{ Group.seasons }})"
-                        title="编辑替换词" class='ms-1'>
+                        title="编辑" class='ms-1'>
                         {{ SVG.edit() }}
-                      </a>
-                      <a href="javascript:delete_custom_word('{{ Word.id }}')" title="删除替换词" class="ms-2">
-                        {{ SVG.x() }}
                       </a>
                     </div>
                   </td>
@@ -152,7 +151,7 @@
                 {% endfor %}
                 {% else %}
                 <tr>
-                  <td colspan="8" align="center">未配置</td>
+                  <td colspan="9" align="center">未配置</td>
                 </tr>
                 {% endif %}
               </tbody>
@@ -183,7 +182,7 @@
               <input type="text" value="" id="new_replaced" class="form-control">
             </div>
           </div>
-          <div class="col-lg-4" id="replace_div">
+          <div class="col-lg-5" id="replace_div">
             <div class="mb-3">
               <label class="form-label required">替换词</label>
               <input type="text" value="" id="new_replace" class="form-control" placeholder="">
@@ -202,13 +201,15 @@
         <div class="row" id="offset_row">
           <div class="col-lg-5" id="front_div">
             <div class="mb-3">
-              <label class="form-label required">前定位词</label>
+              <label class="form-label required">前定位词 <span class="form-help"
+                  title="前后定位词之间的所有数字（包括中文小写，不包括中文大写）视为集数" data-bs-toggle="tooltip">?</span></label>
               <input type="text" value="" id="new_front" class="form-control">
             </div>
           </div>
           <div class="col-lg-5" id="back_div">
             <div class="mb-3">
-              <label class="form-label required">后定位词</label>
+              <label class="form-label required">后定位词 <span class="form-help"
+                  title="前后定位词之间的所有数字（包括中文小写，不包括中文大写）视为集数" data-bs-toggle="tooltip">?</span></label>
               <input type="text" value="" id="new_back" class="form-control">
             </div>
           </div>
@@ -310,6 +311,10 @@
             <div class="mb-3">
               <label class="form-label">季</label>
               <select class="form-select" id="custom_word_season">
+                <option value="-1" selected>全部</option>
+                {% for i in range(0, 51) %}
+                  <option value="{{ i }}">第{{ i }}季</option>
+                {% endfor %}
               </select>
             </div>
           </div>
@@ -403,7 +408,7 @@
               <div class="mb-3">
                 <label class="form-label required">分享代码 <span class="form-help"
                     title="复制以下内容分享给他人，获得分享后使用导入功能导入自定义识别词" data-bs-toggle="tooltip">?</span></label>
-                <pre class="text-wrap" id="export_code">
+                <pre class="text-wrap text-break" id="export_code">
                 </pre>
               </div>
             </div>
@@ -455,7 +460,7 @@
             <div class="col-lg-12">
               <div class="mb-3">
                 <label class="form-label required">应用说明</label>
-                <pre id="import_note"></pre>
+                <pre id="import_note" class="text-wrap text-break"></pre>
               </div>
             </div>
           </div>
@@ -470,32 +475,32 @@
   <script type="text/javascript">
     // 批量启用/停用/导出
     function batch_check_action(flag) {
-      let ids_info = select_GetSelectedVAL("^custom_words")
-      if (ids_info.length == 0) {
-        return;
-      }
-      if (flag == "disable" || flag == "enable") {
+      let ids_info = select_GetSelectedVAL("^custom_words");
+      if (flag === "disable" || flag === "enable") {
         ajax_post("check_custom_words", { flag: flag, ids_info: ids_info }, function (ret) {
-          if (ret.code == 0) {
+          if (ret.code === 0) {
             window_history_refresh();
           } else {
             show_fail_modal(ret.msg);
           }
         });
-      } else if (flag == "export") {
+      } else if (flag === "export") {
         $("#export_ids_info").val(ids_info.join("@"));
         show_export_custom_words_modal();
+      } else if (flag === "export") {
+        $("#export_ids_info").val(ids_info.join("@"));
+        show_export_custom_words_modal();
+      } else if (flag === "delete") {
+        show_confirm_modal(`确定要删除${ids_info.length ? "选中": "所有"}的自定义识别词吗？`, function () {
+          ajax_post("delete_custom_words", { ids_info: ids_info }, function (ret) {
+            if (ret.code === 0) {
+              window_history_refresh();
+            } else {
+              show_fail_modal(ret.msg);
+            }
+          });
+        });
       }
-    }
-
-    // 删除自定义识别词
-    function delete_custom_word(id) {
-      ajax_post("delete_custom_word", { id: id }, function (ret) {
-        if (ret.code == 0) {
-          // window.history.go(0);
-          window_history_refresh();
-        }
-      });
     }
 
     // 显示导出自定义识别词框
@@ -853,10 +858,6 @@
         //初始化下拉框
         $("#season_div").show();
         $("#help_div").attr('class', 'col-lg-6');
-        $("#custom_word_season").empty().append('<option value="-1" selected>全部</option>');
-        for (let i = 0; i <= seasons; i++) {
-          $("#custom_word_season").append(`<option value="${i}">第${i}季</option>`);
-        }
       }
     }
 
@@ -877,7 +878,7 @@
       else if (type == '2') {
         $("#replaced_row").show();
         $("#offset_row").hide();
-        $("#replaced_div").attr('class', 'col-lg-6');
+        $("#replaced_div").attr('class', 'col-lg-5');
         $("#replace_div").show();
         if ($("#enable_row2_div").val() == "1") {
           $("#custom_word_enabled_1").val($("#custom_word_enabled_2").val());
@@ -899,7 +900,7 @@
       else if (type == '3') {
         $("#replaced_row").show();
         $("#offset_row").show();
-        $("#replaced_div").attr('class', 'col-lg-6');
+        $("#replaced_div").attr('class', 'col-lg-5');
         $("#replace_div").show();
         $("#front_div").attr('class', 'col-lg-5');
         $("#back_div").attr('class', 'col-lg-5');
@@ -911,5 +912,8 @@
         $("#type_replaced_offset").prop("checked", true);
       }
     }
-
+    // 展开/收起
+    function show_customwords_detail(id){
+      $(`#div_group${id}`).slideToggle()
+    }
   </script>

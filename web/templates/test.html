@@ -19,35 +19,33 @@
     <meta name="MobileOptimized" content="320"/>
     <title>组件开发效果预览</title>
     <!-- CSS files -->
-    <link href="../static/css/font-awesome.min.css" rel="stylesheet">
     <link href="../static/css/tabler.min.css" rel="stylesheet"/>
     <link href="../static/css/demo.min.css" rel="stylesheet"/>
     <link href="../static/css/fullcalendar.min.css" rel="stylesheet"/>
     <link href="../static/css/jquery.filetree.css" rel="stylesheet"/>
     <link href="../static/css/dropzone.css" rel="stylesheet"/>
     <link href="../static/css/nprogress.css" rel="stylesheet"/>
-    <link href="../static/css/jsoneditor.min.css" rel="stylesheet"/>
     <!-- 附加样式 -->
     <link href="../static/css/style.css" rel="stylesheet"/>
 </head>
 <body>
     <div class="page">
-        <script src="../static/js/demo-theme.min.js"></script>
+        <script src="../static/js/tabler/demo-theme.min.js"></script>
         <script type="module" src="../static/components/lit-index.js"></script>
-        <script src="../static/js/libs/list.min.js"></script>
+        <script src="../static/js/tabler/libs/list.min.js"></script>
         <script src="../static/js/jquery-3.3.1.min.js"></script>
-        <script src="../static/js/tabler.min.js"></script>
-        <script src="../static/js/demo.min.js"></script>
-        <script src="../static/js/echarts.min.js"></script>
-        <script src="../static/js/numeral.min.js"></script>
-        <script src="../static/js/fullcalendar.min.js"></script>
-        <script src="../static/js/locales/zh-cn.js"></script>
-        <script src="../static/js/jquery.filetree.js"></script>
-        <script src="../static/js/dropzone-min.js"></script>
-        <script src="../static/js/dom-to-image.min.js"></script>
-        <script src="../static/js/FileSaver.min.js"></script>
-        <script src="../static/js/nprogress.js"></script>
-        <script src="../static/js/jsoneditor.min.js"></script>
+        <script src="../static/js/tabler/tabler.min.js"></script>
+        <script src="../static/js/tabler/demo.min.js"></script>
+        <script src="../static/js/modules/echarts.min.js"></script>
+        <script src="../static/js/modules/numeral.min.js"></script>
+        <script src="../static/js/modules/moment.min.js"></script>
+        <script src="../static/js/fullcalendar/fullcalendar.min.js"></script>
+        <script src="../static/js/fullcalendar/locales/zh-cn.js"></script>
+        <script src="../static/js/modules/jquery.filetree.js"></script>
+        <script src="../static/js/tabler/libs/dropzone-min.js"></script>
+        <script src="../static/js/modules/dom-to-image.min.js"></script>
+        <script src="../static/js/modules/FileSaver.min.js"></script>
+        <script src="../static/js/modules/nprogress.js"></script>
         <script src="../static/js/util.js"></script>
         <layout-navbar></layout-navbar>
         <layout-searchbar
@@ -56,7 +54,7 @@
             layout-userpris='["无内容"]'
             ></layout-searchbar>
         <div class="page-wrapper page-wrapper-top px-lg-2" id="page_wrapper">
-            <custom-img></custom-img>
+            <page-mediainfo></page-mediainfo>
         </div>
     </div>
 </body>

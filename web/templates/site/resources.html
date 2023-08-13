@@ -105,21 +105,26 @@
                           {% endif %}
                         {% endif %}
                         <a class="ms-2 mb-1" title="名称测试"
-                           href='javascript:nametest("{{ loop.index0 }}", "{{ Result.title }}")'
+                           href='javascript:nametest("{{ loop.index0 }}")'
                            data-bs-toggle="tooltip">
                           {{ SVG.text_recognition() }}
                         </a>
                       </div>
-                      <div class="text-muted">
+                      <div>
                         {% if Result.imdbid %}
                           <a href="https://www.imdb.com/title/{{ Result.imdbid }}/" target="_blank"><img
                                   src="../static/img/icon-imdb.png"></a>
                         {% endif %}
-                        {{ Result.description }}
+                        {% if Result.labels %}
+                          {% for label in Result.labels.split('|') %}
+                            <span class="badge badge-outline text-purple">{{ label }}</span>
+                          {% endfor %}
+                        {% endif %}
+                        <span class="text-muted">{{ Result.description }}</span>
                       </div>
                       <custom-chips class="mt-1" id="testresults_{{ loop.index0 }}"></custom-chips>
                     </td>
-                    <td class="sort-pubdate" data-pubdate="{{ Result.pubdate }}">{{ Result.date_elapsed }}</td>
+                    <td class="sort-pubdate" data-pubdate="{{ Result.pubdate }}">{{ Result.date_elapsed or Result.pubdate }}</td>
                     <td class="sort-size" data-size="{{ Result.size }}">
                       <span class="badge badge-outline text-orange">{{ Result.size|str_filesize }}</span>
                     </td>
@@ -127,7 +132,7 @@
                     <td class="sort-peers" data-peers="{{ Result.peers }}">{{ Result.peers }}</td>
                     <td class="sort-grabs" data-grabs="{{ Result.grabs }}">{{ Result.grabs }}</td>
                     <td>
-                      <a href='javascript:download_site_resource({{ loop.index0 }}, "{{ Result.title }}")'
+                      <a href='javascript:download_site_resource({{ loop.index0 }})'
                          title="下载">
                         {{ SVG.download() }}
                       </a>
@@ -197,8 +202,8 @@
   }
 
   //下载按钮
-  function download_site_resource(id, name) {
-    show_download_modal(id, name, "{{ Title }}", function(){
+  function download_site_resource(id) {
+    show_download_modal(id, $(`#title_${id}`).val(), "{{ Title }}", function(){
       $("#modal-search-download").modal('hide');
       download_resource(id, false);
     })
@@ -224,7 +229,7 @@
       site: site,
       enclosure: enclosure,
       title: title,
-      dl_dir: $("#search_download_dir").val(),
+      dl_dir: get_savepath("search_download_dir", "search_download_dir_manual"),
       dl_setting: $("#search_download_setting").val(),
       description: description,
       page_url: page_url,
@@ -275,9 +280,10 @@
   }
 
   //名称测试
-  function nametest(id, title) {
-    media_name_test(title, `testresults_${id}`, function () {
-    });
+  function nametest(id) {
+    let title = $(`#title_${id}`).val();
+    let subtitle = $(`#description_${id}`).val();
+    media_name_test(title, `testresults_${id}`, function () {}, subtitle);
   }
 
   // 搜索按钮

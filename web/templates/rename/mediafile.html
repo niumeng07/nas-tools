@@ -4,7 +4,7 @@
     <div class="card bg-transparent border-0">
       <div class="ribbon ribbon-top g-cyan d-md-none">
         <a class="text-white" href="javascript:js_change_card()">
-          切换
+          {{ SVG.switch_horizontal() }}
         </a>
       </div>
       <div class="row g-0">
@@ -22,23 +22,27 @@
               {{ SVG.arrow_back_up() }}
               上级目录
             </a>
-            <div id="mediafile_tree"></div>
+            <div id="mediafile_tree" style="overflow-y: auto; overflow-x: hidden"></div>
           </div>
         </div>
         <div class="col d-md-block js-change-card-b" style="display: none;">
-          <div class="card-body border-0">
+          <div class="card-body py-0 border-0">
             <div class="d-flex flex-column flex-md-row justify-content-md-between">
               <div class="text-muted align-self-center">
                 共 <span id="mediafile_num">0</span> 个文件
               </div>
               <div class="align-self-center">
-                <a href="javascript:mediafile_transfer_all()" class="btn" title="转移当前目录">
+                <a href="javascript:mediafile_transfer_all()" class="btn btn-primary" title="转移当前目录">
                   {{ SVG.transform() }}
-                  转移目录
+                  转移
                 </a>
-                <a href="javascript:mediafile_findlinks_all()" class="btn" title="查询所有文件硬链接">
+                <a href="javascript:mediafile_findlinks_all()" class="btn btn-cyan" title="查询所有文件硬链接">
                   {{ SVG.link() }}
-                  所有硬链接
+                  硬链接
+                </a>
+                <a href="javascript:mediafile_scraper_all()" class="btn" title="刮削当前目录">
+                  {{ SVG.link() }}
+                  刮削
                 </a>
               </div>
             </div>
@@ -46,7 +50,8 @@
           <div class="card-body border-0">
             <input type="hidden" id="mediafile_current_dir">
             <input type="hidden" id="mediafile_current_files">
-            <div class="d-grid gap-3" id="mediafile_file_container">
+            <div class="row row-cards" style="overflow-y: auto; overflow-x: hidden">
+              <div class="col" id="mediafile_file_container"></div>
             </div>
           </div>
         </div>
@@ -90,7 +95,7 @@
         <div class="row">
           <label class="form-label required">查找目录</label>
           <div class="row mb-3">
-            <input type="text" value="" id="find_links_dir" class="form-control filetree-folders-only" placeholder="选择路径">
+            <input type="text" value="{{ Dir }}" id="find_links_dir"  class="form-control filetree-folders-only" placeholder="选择路径">
           </div>
         </div>
       </div>
@@ -112,7 +117,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
       </div>
-      <div class="table-responsive"  style="overflow-y: auto; max-height: 35em;">
+      <div class="table-responsive table-modal-body">
         <table id="table-hardlinks" class="table table-vcenter card-table table-hover table-striped"></table>
       </div>
       <div class="modal-footer">
@@ -145,7 +150,7 @@
     } else {
       folder = $("#mediafile_current_dir").val();
     }
-    ajax_post("get_sub_path", {"dir": folder, "filter": "MEDIAFILE|SUBFILE"}, function (ret) {
+    ajax_post("get_sub_path", {"dir": folder, "filter": "MEDIAFILE|SUBFILE|AUDIOTRACKFILE"}, function (ret) {
       $("#mediafile_file_container").empty();
       $("#mediafile_current_files").val('')
       if (ret.data) {
@@ -266,6 +271,21 @@
     });
   }
 
+  // 刮削
+  function mediafile_scraper(name, id) {
+    let path = $(`#mediafilepath_${id}`).val();
+    ajax_post("media_path_scrap", {path: path, name: name}, function (ret) {
+      if (ret.code == 0) {
+        show_success_modal(ret.msg, function () {
+          refresh_files();
+        });
+      } else {
+        show_fail_modal(`${ret.msg}！`);
+      }
+    });
+
+  }
+
   // 下载字幕
   function mediafile_subtitle(name, id) {
     let path = $(`#mediafilepath_${id}`).val();
@@ -323,6 +343,31 @@
     show_findlinks_modal(files);
   }
 
+  // 刮削目录
+  function mediafile_scraper_all() {
+    let files = $("#mediafile_current_files").val();
+    if (!files) {
+      show_fail_modal("当前目录下没有文件！");
+      return;
+    }
+    let path = $(`#mediafile_current_dir`).val();
+    if (!path) {
+      return;
+    }
+    show_ask_modal("刮削将会覆盖已存在的nfo及图片文件，是否确认刮削当前目录下的所有文件？", function () {
+      hide_ask_modal();
+      ajax_post("media_path_scrap", {path: path}, function (ret) {
+        if (ret.code === 0) {
+          show_success_modal(ret.msg, function () {
+            refresh_files();
+          });
+        } else {
+          show_fail_modal(`${ret.msg}！`);
+        }
+      });
+    });
+  }
+
   // 查询硬链接
   function mediafile_findlinks(name, id) {
     let file = $(`#mediafilepath_${id}`).val();
@@ -349,23 +394,40 @@
   function return_to_parentdir() {
     let dir = $("#mediafile_path").val();
     let parentdir = dir.substring(0, dir.lastIndexOf("/"));
+    if (!parentdir) {
+      parentdir = "/";
+    }
     $("#mediafile_path").val(parentdir);
     init_mediafile_tree();
+  }
+
+  // 计算高度
+  function init_mediafile_height() {
+    $("#mediafile_tree").css("height", $(window).height() - 225);
+    $("#mediafile_file_container").css("height", $(window).height() - 200);
   }
 
   // 初始列表
   init_mediafile_tree();
 
+  // 初始化高度
+  init_mediafile_height();
+
+  // 窗口大小改变时重新计算高度
+  $(window).resize(function () {
+    init_mediafile_height();
+  });
+
 </script>
 <script id="mediafile_item_template" type="text/html">
-  <div class="card">
+  <div class="card mb-2">
     <div class="row">
-      <div class="col-auto">
-        <div class="m-1">
+      <div class="col-auto pe-0">
+        <div class="m-2">
           <div class="avatar avatar-md">{FILEEXT}</div>
         </div>
       </div>
-      <div class="col">
+      <div class="col ps-0">
         <div class="p-2 ps-0">
           <div class="row">
             <div class="col">
@@ -387,6 +449,7 @@
               <div class="mt-1 btn-list">
                 <button onclick='mediafile_name_test("{FILENAME}", "testresults_{FILEPOS}")' class="btn btn-sm btn-pill">识别</button>
                 <button onclick='mediafile_transfer("{FILENAME}", "{FILEPOS}")' class="btn btn-sm btn-pill">转移</button>
+                <button onclick='mediafile_scraper("{FILENAME}", "{FILEPOS}")' class="btn btn-sm btn-pill">刮削</button>
                 <button onclick='mediafile_subtitle("{FILENAME}", "{FILEPOS}")' class="btn btn-sm btn-pill">下载字幕</button>
                 <button onclick='mediafile_findlinks("{FILENAME}", "{FILEPOS}")' class="btn btn-sm btn-pill">硬链接查询</button>
                 <button onclick='show_mediafile_rename_modal("{FILENAME}", "{FILEPOS}")' class="btn btn-sm btn-pill">重命名</button>
