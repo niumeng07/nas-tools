@@ -42,9 +42,9 @@ class AutoSignIn(_IPluginModule):
     # 插件配置项ID前缀
     module_config_prefix = "autosignin_"
     # 加载顺序
-    module_order = 0
+    module_order = 19
     # 可使用的用户级别
-    auth_level = 2
+    auth_level = 1
 
     # 私有属性
     siteconf = None

@@ -34,7 +34,7 @@ class TorrentTransfer(_IPluginModule):
     # 插件配置项ID前缀
     module_config_prefix = "torrenttransfer_"
     # 加载顺序
-    module_order = 20
+    module_order = 24
     # 可使用的用户级别
     user_level = 2
 

@@ -20,7 +20,7 @@ class CustomReleaseGroups(_IPluginModule):
     # 插件配置项ID前缀
     module_config_prefix = "customreleasegroups_"
     # 加载顺序
-    module_order = 6
+    module_order = 23
     # 可使用的用户级别
     auth_level = 1
 
