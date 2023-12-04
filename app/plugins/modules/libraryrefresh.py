@@ -29,7 +29,7 @@ class LibraryRefresh(_IPluginModule):
     # 加载顺序
     module_order = 1
     # 可使用的用户级别
-    auth_level = 2
+    auth_level = 1
 
     # 私有属性
     _enable = False
