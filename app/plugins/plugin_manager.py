@@ -108,6 +108,7 @@ class PluginManager:
         log.info(f"插件列表: {plugins}")
         # 用户已安装插件列表
         user_plugins = self.systemconfig.get(SystemConfigKey.UserInstalledPlugins) or []
+        log.info(f"用户已安装插件列表: {user_plugins}")
         self._running_plugins = {}
         self._plugins = {}
         for plugin in plugins:
