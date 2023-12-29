@@ -1,5 +1,4 @@
 from functools import lru_cache
-from urllib.parse import quote
 
 import cn2an
 
@@ -55,14 +54,18 @@ class WebUtils:
         try:
             releases_update_only = Config().get_config("app").get("releases_update_only")
             version_res = RequestUtils(proxies=Config().get_proxies()).get_res(
-                f"https://api.github.com/repos/niumeng07/nas-tools/releases/latest")
-            if version_res:
+                "https://api.github.com/repos/hsuyelin/nas-tools/releases/latest")
+            commit_res = RequestUtils(proxies=Config().get_proxies()).get_res(
+                "https://api.github.com/repos/hsuyelin/nas-tools/commits/master")
+            if version_res and commit_res:
                 ver_json = version_res.json()
-                version = ver_json.get("tag_name")
-                link = ver_json.get("html_url")
-                if version and releases_update_only:
-                    version = version.split()[0]
-                return version, link
+                commit_json = commit_res.json()
+                if releases_update_only:
+                    version = f"{ver_json['tag_name']}"
+                else:
+                    version = f"{ver_json['tag_name']} {commit_json['sha'][:7]}"
+                url = ver_json["html_url"]
+                return version, url
         except Exception as e:
             ExceptionUtils.exception_traceback(e)
         return None, None
@@ -196,7 +199,12 @@ class WebUtils:
         """
         带缓存的请求
         """
-        ret = RequestUtils().get_res(url)
+        if url.find('douban'):
+            ret = RequestUtils(referer="https://movie.douban.com").get_res(url)
+        else:
+            ret = RequestUtils().get_res(url)
         if ret:
             return ret.content
-        return None
+        
+        # 避免 lru 缓存失败的情况，exception 不会被缓存
+        raise Exception('request failed')

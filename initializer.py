@@ -8,12 +8,12 @@ from werkzeug.security import generate_password_hash
 
 import log
 from app.conf import SystemConfig
-from app.helper import DbHelper, PluginHelper
+from app.helper import DbHelper, PluginHelper, ProgressHelper
 from app.plugins import PluginManager
 from app.media import Category
 from app.utils import ConfigLoadCache, CategoryLoadCache, ExceptionUtils, StringUtils
 from app.utils.commons import INSTANCES
-from app.utils.types import SystemConfigKey
+from app.utils.types import SystemConfigKey, BuiltinIndexerFileMd5
 from config import Config
 from web.action import WebAction
 
@@ -68,6 +68,18 @@ def check_config():
             log.info(f"已启用https，请使用 https://IP:{str(web_port)} 访问管理页面")
     else:
         log.error("【Config】配置文件格式错误，找不到app配置项！")
+
+    builtin_indexer_path = Config().get_builtin_indexer_path()
+    builtin_indexer_verify_result = StringUtils.verify_integrity(builtin_indexer_path, BuiltinIndexerFileMd5)
+    if not builtin_indexer_verify_result:
+        recovery_msg = """
+------------------------------------------------------------------
+【Config】内置索引文件被改动，为保证稳定性，请检查是否安装第三方插件或者人为修改
+1. 如果为docker容器/套件，请删除容器/套件重新添加
+2. 如果为其他版本，请重新下载
+------------------------------------------------------------------
+        """
+        log.error(recovery_msg)
 
 
 def update_config():
@@ -327,8 +339,26 @@ def update_config():
     try:
         tmdb_proxy = Config().get_config('laboratory').get("tmdb_proxy")
         if tmdb_proxy:
-            _config['app']['tmdb_domain'] = 'tmdb.nastool.cn'
+            _config['app']['tmdb_domain'] = 'api.tmdb.org'
             _config['laboratory'].pop("tmdb_proxy")
+            overwrite_cofig = True
+    except Exception as e:
+        ExceptionUtils.exception_traceback(e)
+
+    # baiduocr配置文件迁移
+    try:
+        ocr = Config().get_config('ocr')
+        if not ocr:
+            _config['ocr'] = {}
+            _config['ocr']['custom_ocr_url'] = ''
+            _config['ocr']['baiduocr_api_key'] = ''
+            _config['ocr']['baiduocr_secret_key'] = ''
+            overwrite_cofig = True
+        baidu_ocr = Config().get_config('baiduocr')
+        if baidu_ocr:
+            _config['ocr']['baiduocr_api_key'] = baidu_ocr.get('api_key', '') or ''
+            _config['ocr']['baiduocr_secret_key'] = baidu_ocr.get('secret_key', '') or ''
+            _config.pop("baiduocr")
             overwrite_cofig = True
     except Exception as e:
         ExceptionUtils.exception_traceback(e)

@@ -71,6 +71,8 @@ class Sync(object):
             rename = True if sync_conf.RENAME else False
             # 兼容模式
             compatibility = True if sync_conf.COMPATIBILITY else False
+            # 自动定位
+            locating = True if sync_conf.LOCATING else False
             # 转移方式
             syncmode = sync_conf.MODE
             syncmode_enum = ModuleConf.RMT_MODES.get(syncmode)
@@ -93,10 +95,10 @@ class Sync(object):
                 log.info(f"【Sync】{monpath} 不进行监控和同步：手动关闭")
             if target_path and not os.path.exists(target_path) and syncmode_enum not in ModuleConf.REMOTE_RMT_MODES:
                 log.info(f"【Sync】目的目录不存在，正在创建：{target_path}")
-                os.makedirs(target_path)
+                os.makedirs(target_path, exist_ok=True)
             if unknown_path and not os.path.exists(unknown_path):
                 log.info(f"【Sync】未识别目录不存在，正在创建：{unknown_path}")
-                os.makedirs(unknown_path)
+                os.makedirs(unknown_path, exist_ok=True)
             # 登记关系
             self._sync_path_confs[str(sid)] = {
                 'id': sid,
@@ -107,7 +109,8 @@ class Sync(object):
                 'syncmod_name': syncmode_enum.value,
                 "compatibility": compatibility,
                 'rename': rename,
-                'enabled': enabled
+                'enabled': enabled,
+                'locating': locating
             }
             if monpath and os.path.exists(monpath):
                 if enabled:
@@ -131,6 +134,16 @@ class Sync(object):
         if sid:
             return self._sync_path_confs.get(str(sid)) or {}
         return self._sync_path_confs
+
+    def get_filehardlinks_sync_dirs(self):
+        """
+        获取所有硬链接的同步目录设置
+        """
+        sync_dirs = []
+        for src, conf in self.get_sync_path_conf().items():
+            if conf["syncmod"].upper() == 'LINK':
+                sync_dirs.append([conf["from"], conf["to"], conf["locating"]]) 
+        return sync_dirs
 
     def check_source(self, source=None, sid=None):
         """
@@ -419,7 +432,7 @@ class Sync(object):
         self.init_config()
         return ret
 
-    def insert_sync_path(self, source, dest, unknown, mode, compatibility, rename, enabled, note=None):
+    def insert_sync_path(self, source, dest, unknown, mode, compatibility, rename, enabled, locating, note=None):
         """
         添加同步目录配置
         """
@@ -430,11 +443,12 @@ class Sync(object):
                                                     compatibility=compatibility,
                                                     rename=rename,
                                                     enabled=enabled,
+                                                    locating=locating,
                                                     note=note)
         self.init_config()
         return ret
 
-    def check_sync_paths(self, sid=None, compatibility=None, rename=None, enabled=None):
+    def check_sync_paths(self, sid=None, compatibility=None, rename=None, enabled=None, locating=None):
         """
         检查配置的同步目录
         """
@@ -442,7 +456,8 @@ class Sync(object):
             sid=sid,
             compatibility=compatibility,
             rename=rename,
-            enabled=enabled
+            enabled=enabled,
+            locating=locating
         )
         self.init_config()
         return ret

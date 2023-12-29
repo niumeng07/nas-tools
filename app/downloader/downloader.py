@@ -388,11 +388,17 @@ class Downloader:
                     else:
                         tags.append(tag)
             else:
+                # 字符串是空串或者None
+                tags = []
                 if tag:
                     if isinstance(tag, list):
                         tags = tag
                     else:
                         tags = [tag]
+            # 添加站点tag
+            site_tags = self.sites.get_site_download_tags(media_info.site)
+            if site_tags:
+                tags.extend(str(site_tags).split(";"))
 
             # 暂停
             if is_paused is None:
@@ -622,14 +628,14 @@ class Downloader:
             ExceptionUtils.exception_traceback(err)
             return None
 
-    def get_downloading_progress(self, downloader_id=None, ids=None):
+    def get_downloading_progress(self, downloader_id=None, ids=None, force_list = False):
         """
         查询正在下载中的进度信息
         """
         if not downloader_id:
             downloader_id = self.default_downloader_id
         downloader_conf = self.get_downloader_conf(downloader_id)
-        only_nastool = downloader_conf.get("only_nastool")
+        only_nastool = downloader_conf.get("only_nastool") if not force_list else False
         _client = self.__get_client(downloader_id)
         if not _client:
             return []
@@ -1325,6 +1331,14 @@ class Downloader:
             return self.default_client
         return self.__get_client(downloader_id)
 
+    def get_downloader(self, downloader_id=None):
+        """
+        获取下载器实例
+        """
+        if not downloader_id:
+            return self.default_client
+        return self.__get_client(downloader_id)
+
     def get_status(self, dtype=None, config=None):
         """
         测试下载器状态
@@ -1332,7 +1346,8 @@ class Downloader:
         if not config or not dtype:
             return False
         # 测试状态
-        state = self.__build_class(ctype=dtype, conf=config).get_status()
+        download_client = self.__build_class(ctype=dtype, conf=config)
+        state = download_client.get_status() if download_client else False
         if not state:
             log.error(f"【Downloader】下载器连接测试失败")
         return state

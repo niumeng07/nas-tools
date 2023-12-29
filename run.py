@@ -20,7 +20,7 @@ if is_executable:
     os.environ["NASTOOL_LOG"] = os.path.join(config_path, "logs").replace("\\", "/")
     try:
         if not os.path.exists(config_path):
-            os.makedirs(config_path)
+            os.makedirs(config_path, exist_ok=True)
     except Exception as err:
         print(str(err))
 
@@ -47,8 +47,7 @@ def sigal_handler(num, stack):
     WebAction.stop_service()
     # 退出主进程
     log.info('退出主进程...')
-    # sys.exit(0) -> os._exit(0)
-    # fix s6下python进程无法退出的问题
+    # 退出
     os._exit(0)
 
 
@@ -104,8 +103,6 @@ def start_service():
     log.console("开始启动服务...")
     # 启动服务
     WebAction.start_service()
-    # 用户认证
-    # WebAction.auth_user_level()
     # 监听配置文件变化
     start_config_monitor()
 

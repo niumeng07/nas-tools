@@ -53,7 +53,6 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
         if message_labels:
             message_text = message_labels[0].xpath("string(.)")
 
-            log.debug(f"【Sites】{self.site_name} 消息原始信息 {message_text}")
             message_unread_match = re.findall(r"[^Date](信息箱\s*|\(|你有\xa0)(\d+)", message_text)
 
             if message_unread_match and len(message_unread_match[-1]) == 2:
@@ -86,23 +85,34 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
             return
 
     def __parse_user_traffic_info(self, html_text):
+        html = etree.HTML(html_text)
         html_text = self._prepare_html_text(html_text)
         upload_match = re.search(r"[^总]上[传傳]量?[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+[KMGTPI]*B)", html_text,
                                  re.IGNORECASE)
+        if not upload_match:
+            upload_match = re.search(r'<span class="font-bold">上[传傳]量?[:：]</span><span>([\d.]+ [A-Za-z]+)</span>', html_text)
         self.upload = StringUtils.num_filesize(upload_match.group(1).strip()) if upload_match else 0
+
         download_match = re.search(r"[^总子影力]下[载載]量?[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+[KMGTPI]*B)", html_text,
                                    re.IGNORECASE)
+        if not download_match:
+            download_match = re.search(r'<span class="font-bold">下[载載]量?[:：]</span><span>([\d.]+ [A-Za-z]+)</span>', html_text)
         self.download = StringUtils.num_filesize(download_match.group(1).strip()) if download_match else 0
+
         ratio_match = re.search(r"分享率[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+)", html_text)
         # 计算分享率
         calc_ratio = 0.0 if self.download <= 0.0 else round(self.upload / self.download, 3)
         # 优先使用页面上的分享率
-        self.ratio = StringUtils.str_float(ratio_match.group(1)) if (
-                ratio_match and ratio_match.group(1).strip()) else calc_ratio
+        self.ratio = StringUtils.str_float(ratio_match.group(1)) if (ratio_match and ratio_match.group(1).strip()) else calc_ratio
+        if not self.ratio:
+            ratio_element = html.xpath('//span[@class="font-bold"][contains(text(), "分享率：")]/following-sibling::span/font/text()')
+            if ratio_element:
+                _ratio = ratio_element[0].strip() if ratio_element else "0"
+                self.ratio = StringUtils.str_float(_ratio) if StringUtils.str_float(_ratio) else 0.0
+
         leeching_match = re.search(r"(Torrents leeching|下载中)[\u4E00-\u9FA5\D\s]+(\d+)[\s\S]+<", html_text)
         self.leeching = StringUtils.str_int(leeching_match.group(2)) if leeching_match and leeching_match.group(
             2).strip() else 0
-        html = etree.HTML(html_text)
         has_ucoin, self.bonus = self.__parse_ucoin(html)
         if has_ucoin:
             return
@@ -113,12 +123,12 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
             if bonus_match and bonus_match.group(1).strip():
                 self.bonus = StringUtils.str_float(bonus_match.group(1))
                 return
-        bonus_match = re.search(r"mybonus.[\[\]:：<>/a-zA-Z_\-=\"'\s#;.(使用魔力值豆]+\s*([\d,.]+)[<()&\s]", html_text)
+        bonus_match = re.search(r"mybonus.[\[\]:：<>/a-zA-Z_\-=\"'\s#;.(使用魔力值豆]+\s*([\d,.]+)[<()&\s\[]", html_text)
         try:
             if bonus_match and bonus_match.group(1).strip():
                 self.bonus = StringUtils.str_float(bonus_match.group(1))
                 return
-            bonus_match = re.search(r"[魔力值|\]][\[\]:：<>/a-zA-Z_\-=\"'\s#;]+\s*([\d,.]+|\"[\d,.]+\")[<>()&\s]",
+            bonus_match = re.search(r"[魔力值|\]][\[\]:：<>/a-zA-Z_\-=\"'\s#;]+\s*([\d,.]+|\"[\d,.]+\")[<>()&\s\[]",
                                     html_text,
                                     flags=re.S)
             if bonus_match and bonus_match.group(1).strip():
@@ -220,7 +230,7 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
 
         # 是否存在下页数据
         next_page = None
-        next_page_text = html.xpath('//a[contains(.//text(), "下一页") or contains(.//text(), "下一頁")]/@href')
+        next_page_text = html.xpath('//a[contains(.//text(), "下一页") or contains(.//text(), "下一頁") or contains(.//text(), ">")]/@href')
         if next_page_text:
             next_page = next_page_text[-1].strip()
             # fix up page url
@@ -246,9 +256,32 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
         # 加入日期
         join_at_text = html.xpath(
             '//tr/td[text()="加入日期" or text()="注册日期" or *[text()="加入日期"]]/following-sibling::td[1]//text()'
-            '|//div/b[text()="加入日期"]/../text()')
+            '|//div/b[text()="加入日期"]/../text()|//span[text()="加入日期："]/following-sibling::span[1]/text()')
         if join_at_text:
             self.join_at = StringUtils.unify_datetime_str(join_at_text[0].split(' (')[0].strip())
+
+        upload_match = re.search(r"[^总]上[传傳]量?[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+[KMGTPI]*B)", html_text,
+                                 re.IGNORECASE)
+        if not upload_match:
+            upload_match = re.search(r'<span class="font-bold">上[传傳]量?[:：]</span><span>([\d.]+ [A-Za-z]+)</span>', html_text)
+        self.upload = StringUtils.num_filesize(upload_match.group(1).strip()) if upload_match else 0
+
+        download_match = re.search(r"[^总子影力]下[载載]量?[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+[KMGTPI]*B)", html_text,
+                                   re.IGNORECASE)
+        if not download_match:
+            download_match = re.search(r'<span class="font-bold">下[载載]量?[:：]</span><span>([\d.]+ [A-Za-z]+)</span>', html_text)
+        self.download = StringUtils.num_filesize(download_match.group(1).strip()) if download_match else 0
+
+        ratio_match = re.search(r"分享率[:：_<>/a-zA-Z-=\"'\s#;]+([\d,.\s]+)", html_text)
+        # 计算分享率
+        calc_ratio = 0.0 if self.download <= 0.0 else round(self.upload / self.download, 3)
+        # 优先使用页面上的分享率
+        self.ratio = StringUtils.str_float(ratio_match.group(1)) if (ratio_match and ratio_match.group(1).strip()) else calc_ratio
+        if not self.ratio or self.ratio == 0.0:
+            ratio_element = html.xpath('//span[@class="font-bold"][contains(text(), "分享率：")]/following-sibling::span/font/text()')
+            if ratio_element:
+                _ratio = ratio_element[0].strip() if ratio_element else "0"
+                self.ratio = StringUtils.str_float(_ratio) if StringUtils.str_float(_ratio) else 0.0
 
         # 做种体积 & 做种数
         # seeding 页面获取不到的话，此处再获取一次
@@ -327,6 +360,15 @@ class NexusPhpSiteUserInfo(_ISiteUserInfo):
                                       'following-sibling::td[1]/img[1]/@title')
         if user_levels_text:
             self.user_level = user_levels_text[0].strip()
+            return
+
+        user_levels_text = html.xpath('//span[@class="font-bold m-auto" and contains(text(), "等级：")]/following-sibling::span/b')
+        if user_levels_text:
+            user_level_element = user_levels_text[0]
+            if not StringUtils.is_string_and_not_empty(user_level_element.text):
+                return
+            self.user_level = user_level_element.text.strip()
+            log.debug(f"【Sites】站点 {self.site_name} 等级: {self.user_level}")
             return
 
         user_levels_text = html.xpath('//tr/td[text()="等級" or text()="等级"]/'

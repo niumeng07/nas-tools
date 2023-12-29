@@ -31,9 +31,9 @@ class IYUUAutoSeed(_IPluginModule):
     # 插件版本
     module_version = "1.0"
     # 插件作者
-    module_author = "niumeng07"
+    module_author = "jxxghp"
     # 作者主页
-    author_url = "https://github.com/niumeng07"
+    author_url = "https://github.com/jxxghp"
     # 插件配置项ID前缀
     module_config_prefix = "iyuuautoseed_"
     # 加载顺序
@@ -64,6 +64,7 @@ class IYUUAutoSeed(_IPluginModule):
         "//a[contains(@href, 'download.php?hash=')]/@href",
         "//a[contains(@href, 'download.php?id=')]/@href",
         "//a[@class='index'][contains(@href, '/dl/')]/@href",
+        "//input[@title='DirectLink']/@value",
     ]
     _torrent_tags = ["已整理", "辅种"]
     # 待校全种子hash清单

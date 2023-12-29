@@ -24,8 +24,6 @@ let ProgressES;
 let LoggingSource = "";
 // 日志EventSource
 let LoggingES;
-// 是否存量消息刷新
-let OldMessageFlag = true;
 // 消息WebSocket
 let MessageWS;
 // 当前协议
@@ -33,6 +31,8 @@ let WSProtocol = "ws://";
 if (window.location.protocol === "https:") {
   WSProtocol = "wss://"
 }
+// 页面加载的时间
+let PageLoadedTime = new Date();
 
 
 /**
@@ -240,8 +240,17 @@ function logger_select(source) {
   start_logging();
 }
 
+// 停止消息服务
+function stop_message() {
+  if (MessageWS) {
+    MessageWS.close();
+    MessageWS = undefined;
+  }
+}
+
 // 连接消息服务
 function connect_message() {
+  stop_message();
   MessageWS = new ReconnectingWebSocket(WSProtocol + window.location.host + '/message');
   MessageWS.onmessage = function (event) {
     render_message(JSON.parse(event.data))
@@ -279,12 +288,14 @@ function render_message(ret) {
       // 滚动到顶部
       $(".offcanvas-body").animate({scrollTop: 0}, 300);
       // 浏览器消息提醒
-      if (!OldMessageFlag && !$("#offcanvasEnd").is(":hidden")) {
-        browserNotification(msg.title, msg.content);
+      if (!$("#offcanvasEnd").is(":hidden")) {
+        // 判断消息时间是否大于页面打开时间
+        let message_time = new Date(msg.time.replace(/-/g, '/'));
+        if (message_time > PageLoadedTime) {
+          browserNotification(msg.title, msg.content);
+        }
       }
     }
-    // 非旧消息
-    OldMessageFlag = false;
   }
   // 下一次处理
   if (lst_time) {
@@ -302,22 +313,21 @@ function get_message(lst_time) {
   MessageWS.send(JSON.stringify({"lst_time": lst_time}));
 }
 
-//检查系统是否在线
-function check_system_online() {
-  ajax_post("refresh_process", {type: "restart"}, function (ret) {
-    if (ret.code === -1) {
-      logout();
-    } else {
-      setTimeout("check_system_online()", 1000);
-    }
-  }, true, false)
-}
-
 //注销
 function logout() {
   ajax_post("logout", {}, function (ret) {
     window.location.href = "/";
   });
+}
+
+//返回到登录页
+function back_to_login_page(type) {
+  timeout = (type === "restart") ? 6000 : 9000;
+  setTimeout(logout, timeout);
+  setTimeout(function() {
+    hide_wait_modal();
+    window.location.href = "/";
+  }, timeout);
 }
 
 //重启
@@ -327,7 +337,7 @@ function restart() {
     ajax_post("restart", {}, function (ret) {
     }, true, false);
     show_wait_modal(true);
-    setTimeout("check_system_online()", 5000);
+    back_to_login_page("restart");
   });
 }
 
@@ -344,7 +354,7 @@ function update(version) {
     ajax_post("update_system", {}, function (ret) {
     }, true, false)
     show_wait_modal(true);
-    setTimeout("check_system_online()", 5000);
+    back_to_login_page("update_system");
   });
 }
 
@@ -355,61 +365,6 @@ function show_init_alert_modal() {
     GlobalModalAbort = true;
     navmenu('basic');
   });
-}
-
-// 显示用户认证对话框
-function show_user_auth_modal() {
-  GlobalModalAbort = false;
-  $("#modal-user-auth").modal("show");
-}
-
-// 用户认证
-function user_auth() {
-  $("#user_auth_btn").text("认证中...").prop("disabled", true);
-  let siteid = $("#user_auth_site").val();
-  let params = input_select_GetVal(`user_auth_${siteid}_params`, `${siteid}_`);
-  ajax_post("auth_user_level", {site: siteid, params: params}, function (ret) {
-    GlobalModalAbort = true;
-    $("#modal-user-auth").modal("hide");
-    $("#user_auth_btn").prop("disabled", false).text("认证");
-    if (ret.code === 0) {
-      window.location.reload();
-    } else {
-      show_fail_modal(ret.msg);
-    }
-  }, true, false);
-}
-
-// 初始化tomselect
-function init_tomselect() {
-  let el;
-  window.TomSelect && (new TomSelect(el = document.getElementById('user_auth_site'), {
-    copyClassesToDropdown: false,
-    dropdownClass: 'dropdown-menu ts-dropdown',
-    optionClass: 'dropdown-item',
-    controlInput: '<input>',
-    render: {
-      item: function (data, escape) {
-        if (data.customProperties) {
-          return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-        }
-        return '<div>' + escape(data.text) + '</div>';
-      },
-      option: function (data, escape) {
-        if (data.customProperties) {
-          return '<div><span class="dropdown-item-indicator">' + data.customProperties + '</span>' + escape(data.text) + '</div>';
-        }
-        return '<div>' + escape(data.text) + '</div>';
-      },
-    },
-  }));
-}
-
-// TomSelect响应事件
-function switch_cooperation_sites(obj) {
-  let siteid = $(obj).val();
-  $(".user_auth_params").hide();
-  $(`#user_auth_${siteid}_params`).show();
 }
 
 // 停止刷新进度条
@@ -1396,65 +1351,175 @@ function fresh_tooltip() {
 }
 
 //打开路径选择框
-function openFileBrowser(el, root, filter, on_folders, on_files, close_on_select) {
+function openFileBrowser(el, root, only_folders, on_folders, on_files, close_on_select) {
   if (on_folders === undefined) on_folders = true;
   if (on_files === undefined) on_files = true;
-  if (!filter && !on_files) filter = 'HIDE_FILES_FILTER';
+  if (!only_folders && !on_files) only_folders = true;
   if (!root.trim()) root = "";
   let p = $(el);
-  // Skip is fileTree is already open
+  // 目录树已打开则跳过
   if (p.next().hasClass('fileTree')) return null;
-  // create a random id
+  // 创建随机数附加在id上
   const r = Math.floor((Math.random() * 1000) + 1);
-  // Add a new span and load fileTree
-  p.after("<div id='fileTree" + r + "' class='fileTree card shadow-sm' style='z-index: 99999;'></div>");
+  // 在“父对象”之后添加目录树和工具盒并初始化
+  p.after(`<div id='fileTree${r}' class='fileTree card shadow-sm' style='z-index: 99999;'></div>
+           <div id='treeToolbox${r}' class='filetree-toolbox'> 
+            <a id='treeToolbox_system' href='javascript:blur()'>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24"
+                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                    stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <polyline points="5 12 3 12 12 3 21 12 19 12"></polyline>
+                <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path>
+                <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path>
+              </svg>
+              系统
+            </a>
+            <a id='treeToolbox_media' href='javascript:blur()'>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-player-play"
+                    width="24" height="24" viewBox="0 0 24 24"
+                    stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M7 4v16l13 -8z"></path>
+              </svg>
+              媒体
+            </a>
+            <a id='treeToolbox_sync' href='javascript:blur()'>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-refresh"
+                    width="24" height="24" viewBox="0 0 24 24"
+                    stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>
+                <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path>
+              </svg>
+              同步
+            </a>            
+            <a id='treeToolbox_download' href='javascript:blur()'>
+              <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24"
+                    viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+                    stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                <polyline points="7 11 12 16 17 11"></polyline>
+                <line x1="12" y1="4" x2="12" y2="16"></line>
+              </svg>
+              下载
+            </a></div>`);
   const ft = $('#fileTree' + r);
-  ft.fileTree({
-        script: 'dirlist',
-        root: root,
-        filter: filter,
-        allowBrowsing: true
-      },
-      function (file) {
-        if (on_files) {
-          p.val(file);
-          p.trigger('change');
-          if (close_on_select) {
-            ft.slideUp('fast', function () {
-              ft.remove();
-            });
-          }
-        }
-      },
-      function (folder) {
-        if (on_folders) {
-          p.val(folder);
-          p.trigger('change');
-          if (close_on_select) {
-            $(ft).slideUp('fast', function () {
-              $(ft).remove();
-            });
-          }
-        }
-      });
-  // Format fileTree according to parent position, height and width
-  ft.css({'left': p.position().left, 'top': (p.position().top + p.outerHeight()), 'width': (p.parent().width())});
-  // close if click elsewhere
+  const toolbox = $('#treeToolbox' + r);
+  init_browser(root);
+  init_toolbox();
+  // 目录树、工具盒与“父对象”的位置、宽度保持一致（无需设置top，在某些场景下设置top会导致错位，例如下载器的目录设置）
+  ft.css({'left': p.position().left, 'width': (p.parent().width())});
+  toolbox.css({'left': p.position().left+p.parent().width()});  
+  // 操作区外点击时关闭路径选择框
   $(document).mouseup(function (e) {
-    if (!ft.is(e.target) && ft.has(e.target).length === 0) {
-      ft.slideUp('fast', function () {
-        $(ft).remove();
-      });
+    if (!ft.is(e.target) && ft.has(e.target).length === 0 && !toolbox.is(e.target) && toolbox.has(e.target).length === 0) {
+      close_browser();
     }
   });
-  // close if parent changed
+  // “父对象”改变时关闭关闭路径选择框
   p.bind("keydown", function () {
-    ft.slideUp('fast', function () {
-      $(ft).remove();
-    });
+    close_browser();
   });
-  // Open fileTree
+  // 打开目录树、工具盒
   ft.slideDown('fast');
+  toolbox.fadeIn('slow');
+
+  // 初始化路径选择框
+  function init_browser(root){
+    ft.removeData("fileTree");      
+    ft.fileTree({
+      script: 'dirlist',
+      root: encodeURIComponent(root),
+      onlyFolders: only_folders,
+      multiFolder: false
+    },
+    // 回调方法,只对文件有效,目录必须通过事件进行处理
+    function (file) {
+      if (on_files) {
+        // 回写路径
+        write_back_path(p, file);
+        // 如果选择时关闭则关闭路径选择框
+        if (close_on_select) {
+          close_browser();      
+        }
+      }
+    }).on("filetreeexpanded filetreecollapsed", function(e, data){
+      // 展开折叠时回写路径
+      if (data.rel){
+        write_back_path(p, data.rel);
+      }
+      // 如果选择时关闭则关闭路径选择框
+      if (close_on_select) {
+        close_browser();
+      }
+    }).on("filetreeinitiated filetreeexpanded", function(e, data) {
+      // 初始化结束和展开结束时获得目录(jQueryFileTree原代码处理filetreeinitiated事件处理有误，须删除showTree中的根目录判断才能正确触发)
+      if (on_folders) {
+        // 处理跳转目录
+        if (ft.attr("data-event-time") != e.timeStamp){
+          ft.attr("data-event-time", e.timeStamp);
+          let target = e.type === "filetreeinitiated" ? ft: $(data.li[0]);     
+          init_jump_dirs(target.find("ul .link-folder"));
+          // 刷新tooltip
+          fresh_tooltip(); 
+        }
+      }
+    });
+  }
+  
+  // 初始化工具盒
+  function init_toolbox(){
+    toolbox.find('#treeToolbox_system').off().on('click',function(){
+      init_browser(root);
+    });
+    toolbox.find('#treeToolbox_sync').off().on('click',function(){
+      init_browser("*SYNC-FOLDERS*");
+    });
+    toolbox.find('#treeToolbox_media').off().on('click',function(){
+      init_browser("*MEDIA-FOLDERS*");
+    });
+    toolbox.find('#treeToolbox_download').off().on('click',function(){
+      init_browser("*DOWNLOAD-FOLDERS*");
+    });
+  }
+
+  // 初始化跳转目录
+  function init_jump_dirs(dirs) {
+    for (let i=0; i < dirs.length; i++) {
+      // 忽略空路径
+      if ($(dirs[i]).attr("data-jump") === "") continue
+      // 绑定事件，点击时跳转到硬链接目录
+      $(dirs[i]).on("click", function (event){
+        root = $(this).attr("data-jump");
+        // 父元素移除时，自动产生的tooltip不会自动移除，须强行销毁
+        $(this).tooltip("dispose");
+        // 回写路径
+        write_back_path(p, root);
+        // 初始化路径选择框
+        init_browser(root);
+      });        
+    }
+    // 刷新tooltip
+    fresh_tooltip();
+  }
+
+  // 回写路径
+  function write_back_path(target, path){
+    target.val(path);
+    target.trigger('change');
+  }
+
+  // 关闭路径选择框
+  function close_browser(){
+    ft.slideUp('fast', function () {
+      $(this).remove();
+    });
+    toolbox.fadeOut('fast', function () {
+      $(this).remove();
+    });     
+  }  
 }
 
 //初始化目录选择控件
@@ -1554,6 +1619,8 @@ function show_manual_transfer_modal(manual_type, inpath, syncmod, media_type, un
     $("#rename_season").val("");
   }
 
+  $("#ignore_download_his_div").show();
+
   // 清空输入框
   $("#rename_min_filesize").val("");
   $("#rename_specify_episode").val("");
@@ -1603,6 +1670,7 @@ function manual_media_transfer() {
   const path = $("#rename_path").val();
   const inpath = $("#rename_inpath").val();
   const outpath = $("#rename_outpath").val();
+  const ignore_download_history = $("#ignore_download_his").val();
   if (manual_type == '3') {
     syncmod = $("#rename_syncmod_customize").val();
   } else {
@@ -1693,7 +1761,8 @@ function manual_media_transfer() {
     "min_filesize": min_filesize,
     "unknown_id": unknown_id,
     "path": path,
-    "logid": logid
+    "logid": logid,
+    "ignore_download_history": ignore_download_history,
   };
   $('#modal-media-identification').modal('hide');
   show_refresh_progress("手动转移 " + inpath, "filetransfer");

@@ -38,7 +38,7 @@ class MovieRandom(_IPluginModule):
     # 加载顺序
     module_order = 18
     # 可使用的用户级别
-    auth_level = 1
+    auth_level = 2
 
     # 退出事件
     _event = Event()

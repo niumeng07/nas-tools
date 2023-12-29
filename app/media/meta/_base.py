@@ -15,6 +15,8 @@ class MetaBase(object):
     category_handler = None
     # 是否处理的文件
     fileflag = False
+    # 需要处理的文件路径，如果有
+    filePath = None
     # 原字符串
     org_string = None
     # 识别词处理后字符串
@@ -144,12 +146,21 @@ class MetaBase(object):
     note = {}
     # 副标题解析
     _subtitle_flag = False
-    _subtitle_season_re = r"(?<![全|共]\s*)[第\s]+([0-9一二三四五六七八九十S\-]+)\s*季(?!\s*[全|共])"
-    _subtitle_season_all_re = r"[全|共]\s*([0-9一二三四五六七八九十]+)\s*季|([0-9一二三四五六七八九十]+)\s*季\s*[全|共]"
-    _subtitle_episode_re = r"(?<![全|共]\s*)[第\s]+([0-9一二三四五六七八九十百零EP\-]+)\s*[集话話期](?!\s*[全|共])"
-    _subtitle_episode_all_re = r"([0-9一二三四五六七八九十百零]+)\s*集\s*[全|共]|[全|共]\s*([0-9一二三四五六七八九十百零]+)\s*[集话話期]"
+    _subtitle_season_re = r"(?<![全共]\s*)[第\s]+([0-9一二三四五六七八九十S\-]+)\s*季(?!\s*[全共])"
+    _subtitle_season_all_re = r"[全共]\s*([0-9一二三四五六七八九十]+)\s*季|([0-9一二三四五六七八九十]+)\s*季\s*全"
+    _subtitle_episode_re = r"(?<![全共]\s*)[第\s]+([0-9一二三四五六七八九十百零EP\-]+)\s*[集话話期](?!\s*[全共])"
+    _subtitle_episode_all_re = r"([0-9一二三四五六七八九十百零]+)\s*集\s*全|[全共]\s*([0-9一二三四五六七八九十百零]+)\s*[集话話期]"
 
-    def __init__(self, title, subtitle=None, fileflag=False):
+    def __init__(self,
+                 title,
+                 subtitle=None,
+                 fileflag=False,
+                 filePath=None,
+                 media_type=None,
+                 cn_name=None,
+                 en_name=None,
+                 tmdb_id=None,
+                 imdb_id=None):
         self.category_handler = Category()
         self.fanart = Fanart()
         if not title:
@@ -157,6 +168,12 @@ class MetaBase(object):
         self.org_string = title
         self.subtitle = subtitle
         self.fileflag = fileflag
+        self.filePath = filePath
+        self.media_type = media_type
+        self.cn_name = cn_name
+        self.en_name = en_name
+        self.tmdb_id = tmdb_id
+        self.imdb_id = imdb_id
 
     def get_name(self):
         if self.cn_name and StringUtils.is_all_chinese(self.cn_name):
@@ -385,6 +402,13 @@ class MetaBase(object):
         else:
             return ""
 
+    # 返回自定义占位符字符串
+    def get_customization_string(self):
+        if self.customization:
+            return self.customization
+        else:
+            return ""
+
     # 返回视频编码
     def get_video_encode_string(self):
         return self.video_encode or ""
@@ -559,7 +583,7 @@ class MetaBase(object):
         self.backdrop_path = Config().get_tmdbimage_url(info.get('backdrop_path')) \
             if info.get('backdrop_path') else ""
 
-    # 整合种了信息
+    # 整合种子信息
     def set_torrent_info(self,
                          site=None,
                          site_order=0,

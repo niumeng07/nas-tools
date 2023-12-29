@@ -26,9 +26,9 @@ class OpenSubtitles(_IPluginModule):
     # 插件版本
     module_version = "1.0"
     # 插件作者
-    module_author = "niumeng07"
+    module_author = "jxxghp"
     # 作者主页
-    author_url = "https://github.com/niumeng07"
+    author_url = "https://github.com/jxxghp"
     # 插件配置项ID前缀
     module_config_prefix = "opensubtitles_"
     # 加载顺序
@@ -52,7 +52,7 @@ class OpenSubtitles(_IPluginModule):
         self.sitehelper = SiteHelper()
         self._save_tmp_path = Config().get_temp_path()
         if not os.path.exists(self._save_tmp_path):
-            os.makedirs(self._save_tmp_path)
+            os.makedirs(self._save_tmp_path, exist_ok=True)
         if config:
             self._enable = config.get("enable")
 

@@ -9,10 +9,6 @@ from logging.handlers import RotatingFileHandler
 
 from config import Config
 
-
-FORMAT = '%(asctime)s %(filename)s %(lineno)d %(message)s'
-logging.basicConfig(format=FORMAT)
-
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 lock = threading.Lock()
 
@@ -54,9 +50,9 @@ class Logger:
             logpath = os.environ.get('NASTOOL_LOG') or self.__config.get_config('app').get('logpath') or ""
             if logpath:
                 if not os.path.exists(logpath):
-                    os.makedirs(logpath)
+                    os.makedirs(logpath, exist_ok=True)
                 log_file_handler = RotatingFileHandler(filename=os.path.join(logpath, module + ".txt"),
-                                                       maxBytes=30 * 1024 * 1024,
+                                                       maxBytes=5 * 1024 * 1024,
                                                        backupCount=3,
                                                        encoding='utf-8')
                 log_file_handler.setFormatter(logging.Formatter('%(asctime)s\t%(levelname)s: %(message)s'))

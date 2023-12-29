@@ -67,6 +67,7 @@ class CONFIGSYNCPATHS(Base):
     RENAME = Column(Integer)
     ENABLED = Column(Integer)
     NOTE = Column(Text)
+    LOCATING = Column(Integer)
 
 
 class CONFIGUSERS(Base):
@@ -321,7 +322,7 @@ class TORRENTREMOVETASK(Base):
     INTERVAL = Column(Integer)
     ENABLED = Column(Integer)
     SAMEDATA = Column(Integer)
-    ONLYNASTOOL = Column(Integer)
+    ONLY_NASTOOL = Column(Integer)
     DOWNLOADER = Column(Text)
     CONFIG = Column(Text)
     NOTE = Column(Text)
@@ -372,6 +373,8 @@ class SITEBRUSHTASK(Base):
     SEED_SIZE = Column(Text)
     INTEVAL = Column(Text)
     LABEL = Column(Text)
+    UP_LIMIT = Column(Text)
+    DL_LIMIT = Column(Text)
     SAVEPATH = Column(Text)
     DOWNLOADER = Column(Text)
     TRANSFER = Column(Text)

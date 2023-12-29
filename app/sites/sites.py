@@ -92,6 +92,7 @@ class Sites:
                 "chrome": True if site_note.get("chrome") == "Y" else False,
                 "proxy": True if site_note.get("proxy") == "Y" else False,
                 "subtitle": True if site_note.get("subtitle") == "Y" else False,
+                "tags": site_note.get("tags"),
                 "limit_interval": site_note.get("limit_interval"),
                 "limit_count": site_note.get("limit_count"),
                 "limit_seconds": site_note.get("limit_seconds"),
@@ -247,6 +248,16 @@ class Sites:
                     return site.get("download_setting")
         return None
 
+    def get_site_download_tags(self, site_name=None):
+        """
+        获取站点标签
+        """
+        if site_name:
+            for site in self._siteByIds.values():
+                if site.get("name") == site_name:
+                    return site.get("tags")
+        return None
+
     def test_connection(self, site_id):
         """
         测试站点连通性
@@ -265,6 +276,8 @@ class Sites:
             return False, "未配置站点地址", 0
         # 站点特殊处理...
         if '1ptba' in site_url:
+            site_url = site_url + '/index.php'
+        elif 'zmpt' in site_url:
             site_url = site_url + '/index.php'
         chrome = ChromeHelper()
         if site_info.get("chrome") and chrome.get_status():
@@ -361,3 +374,26 @@ class Sites:
                                                   ua=ua)
         self.init_config()
         return ret
+
+    def need_goto_user_detail_fetch(self, site_id):
+        """
+        检查站点是否需要去用户信息页面拉取用户详情
+        :param site_id: 站点ID
+        :return: 是否需要去用户信息页面
+        """
+        site_info = self.get_sites(siteid=site_id)
+        if not site_info:
+            return False, None
+        site_cookie = site_info.get("cookie")
+        if not site_cookie:
+            return False, None
+        ua = site_info.get("ua") or Config().get_ua()
+        site_url = StringUtils.get_base_url(site_info.get("signurl") or site_info.get("rssurl"))
+        if not site_url:
+            return False, None
+        
+        if "hhanclub" in site_url:
+            hhanclub_pattern = r'<a href="claim\.php\?uid=(\d+)">'
+            return True, hhanclub_pattern
+        else:
+            return False, None

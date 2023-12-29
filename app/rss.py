@@ -7,6 +7,7 @@ from app.filter import Filter
 from app.helper import DbHelper, RssHelper
 from app.media import Media
 from app.media.meta import MetaInfo
+from app.message import Message
 from app.sites import Sites, SiteConf
 from app.subscribe import Subscribe
 from app.utils import ExceptionUtils, Torrent
@@ -27,6 +28,7 @@ class Rss:
     dbhelper = None
     rsshelper = None
     subscribe = None
+    message = None
 
     def __init__(self):
         self.init_config()
@@ -40,6 +42,7 @@ class Rss:
         self.dbhelper = DbHelper()
         self.rsshelper = RssHelper()
         self.subscribe = Subscribe()
+        self.message = Message()
 
     def rssdownload(self):
         """
@@ -265,13 +268,14 @@ class Rss:
                             # 洗版模式
                             else:
                                 # 洗版时季集不完整的资源不要
-                                if media_info.type != MediaType.MOVIE \
+                                '''if media_info.type != MediaType.MOVIE \
                                         and media_info.get_episode_list():
                                     log.info(
                                         f"【Rss】{media_info.get_title_string()}{media_info.get_season_string()} "
+                                        #f"正在洗版，过滤掉季集不完整的资源：{title}"
                                         f"正在洗版，过滤掉季集不完整的资源：{title}"
                                     )
-                                    continue
+                                    continue'''
                                 if not self.subscribe.check_subscribe_over_edition(
                                         rtype=media_info.type,
                                         rssid=match_info.get("id"),

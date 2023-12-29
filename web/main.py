@@ -13,14 +13,16 @@ from math import floor
 from pathlib import Path
 from threading import Lock
 from urllib import parse
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
+from dotenv import load_dotenv
 from flask import Flask, request, json, render_template, make_response, session, send_from_directory, send_file, \
     redirect, Response
 from flask_compress import Compress
 from flask_login import LoginManager, login_user, login_required, current_user
 from flask_sock import Sock
 from icalendar import Calendar, Event, Alarm
+from simple_websocket import ConnectionClosed
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import log
@@ -45,10 +47,18 @@ from config import PT_TRANSFER_INTERVAL, Config, TMDB_API_DOMAINS
 from web.action import WebAction
 from web.apiv1 import apiv1_bp
 from web.backend.WXBizMsgCrypt3 import WXBizMsgCrypt
-from web.backend.user import User
+from web.backend.pro_user import ProUser
 from web.backend.wallpaper import get_login_wallpaper
 from web.backend.web_utils import WebUtils
 from web.security import require_auth
+
+flask_dir = Path(__file__).resolve().parent.parent
+flask_env_path = flask_dir / ".flaskenv"
+if flask_env_path.is_file():
+    print(f"正在加载flask环境变量: {str(flask_env_path)}")
+    load_dotenv(dotenv_path=flask_env_path)
+else:
+    print("flask.env 文件不存在")
 
 # 配置文件锁
 ConfigLock = Lock()
@@ -59,6 +69,7 @@ App.wsgi_app = ProxyFix(App.wsgi_app)
 App.config['JSON_AS_ASCII'] = False
 App.config['JSON_SORT_KEYS'] = False
 App.config['SOCK_SERVER_OPTIONS'] = {'ping_interval': 25}
+App.config['SESSION_REFRESH_EACH_REQUEST'] = False
 App.secret_key = os.urandom(24)
 App.permanent_session_lifetime = datetime.timedelta(days=30)
 
@@ -99,7 +110,7 @@ def add_header(r):
 # 定义获取登录用户的方法
 @LoginManager.user_loader
 def load_user(user_id):
-    return User().get(user_id)
+    return ProUser().get(user_id)
 
 
 # 页面不存在
@@ -182,7 +193,7 @@ def login():
         remember = request.form.get('remember')
         if not username:
             return redirect_to_login('请输入用户名')
-        user_info = User().get_user(username)
+        user_info = ProUser().get_user(username)
         if not user_info:
             return redirect_to_login('用户名或密码错误')
         # 校验密码
@@ -215,10 +226,8 @@ def web():
     Indexers = Indexer().get_indexers()
     SearchSource = "douban" if Config().get_config("laboratory").get("use_douban_titles") else "tmdb"
     CustomScriptCfg = SystemConfig().get(SystemConfigKey.CustomScript)
-    CooperationSites = current_user.get_authsites()
     Menus = WebAction().get_user_menus().get("menus") or []
     Commands = WebAction().get_commands()
-    current_user.level = 2
     return render_template('navigation.html',
                            GoPage=GoPage,
                            CurrentUser=current_user,
@@ -233,7 +242,6 @@ def web():
                            Indexers=Indexers,
                            SearchSource=SearchSource,
                            CustomScriptCfg=CustomScriptCfg,
-                           CooperationSites=CooperationSites,
                            DefaultPath=DefaultPath,
                            Menus=Menus,
                            Commands=Commands)
@@ -261,6 +269,11 @@ def index():
     # 媒体库
     Librarys = MediaServer().get_libraries()
     LibrarySyncConf = SystemConfig().get(SystemConfigKey.SyncLibrary) or []
+    AllLibraryModule = [MyMediaLibraryType.MINE, MyMediaLibraryType.WATCHING, MyMediaLibraryType.NEWESTADD]
+    LibraryManageConf = SystemConfig().get(SystemConfigKey.LibraryDisplayModule) or []
+    if not LibraryManageConf:
+        for index, item in enumerate(AllLibraryModule):
+            LibraryManageConf.append({"id": index, "name": item.value, "selected": True})
 
     # 继续观看
     Resumes = MediaServer().get_resume()
@@ -283,6 +296,7 @@ def index():
                            MediaServerType=MSType,
                            Librarys=Librarys,
                            LibrarySyncConf=LibrarySyncConf,
+                           LibraryManageConf=LibraryManageConf,
                            Resumes=Resumes,
                            Latests=Latests
                            )
@@ -295,7 +309,7 @@ def search():
     # 权限
     if current_user.is_authenticated:
         username = current_user.username
-        pris = User().get_user(username).get("pris")
+        pris = ProUser().get_user(username).get("pris")
     else:
         pris = ""
     # 结果
@@ -391,7 +405,7 @@ def sites():
 @App.route('/sitelist', methods=['POST', 'GET'])
 @login_required
 def sitelist():
-    IndexerSites = Indexer().get_indexers(check=False)
+    IndexerSites = Indexer().get_indexer_dict(check=False, public=False, plugins=False)
     return render_template("site/sitelist.html",
                            Sites=IndexerSites,
                            Count=len(IndexerSites))
@@ -402,22 +416,23 @@ def sitelist():
 def open_app():
     return render_template("openapp.html")
 
+
 # 站点资源页面
 @App.route('/resources', methods=['POST', 'GET'])
 @login_required
 def resources():
-    site_id = request.args.get("site")
+    site_domain = request.args.get("site")
     site_name = request.args.get("title")
     page = request.args.get("page") or 0
     keyword = request.args.get("keyword")
     Results = WebAction().list_site_resources({
-        "id": site_id,
+        "site": site_domain,
         "page": page,
         "keyword": keyword
     }).get("data") or []
     return render_template("site/resources.html",
                            Results=Results,
-                           SiteId=site_id,
+                           SiteDomain=site_domain,
                            Title=site_name,
                            KeyWord=keyword,
                            TotalCount=len(Results),
@@ -658,7 +673,7 @@ def brushtask():
     # 下载器列表
     Downloaders = Downloader().get_downloader_conf_simple()
     # 任务列表
-    Tasks = BrushTask().get_brushtask_info()
+    Tasks = BrushTask().get_brushtask_info().values()
     return render_template("site/brushtask.html",
                            Count=len(Tasks),
                            Sites=CfgSites,
@@ -1048,11 +1063,80 @@ def do():
 @App.route('/dirlist', methods=['POST'])
 @login_required
 def dirlist():
+    def match_sync_dir(folder, x, y, locating, direction):
+        """
+        匹配同步目录对硬链接信息生成HTML
+        """
+        result = False
+        sync_class = ""
+        link_path = ""
+        link_direction = ""
+        # 匹配同步目录
+        sync_class = f"sync-{'src' if direction == '→' else 'dest'}{' auto-locate' if locating else ''}"
+        if folder == x:
+            target = SystemUtils.shorten_path(y) if y else "未设置"
+            link_path = f'<span class="link-folder" data-bs-toggle="tooltip" title="{y}" data-jump="{y}">{target}</span>'
+            link_direction = f'<span class="link-direction" data-direction="{direction}">{direction}</span>'
+            result = True
+        return result, sync_class, link_path, link_direction
+        
+    def get_hardlink_info(folder):
+        """
+        获取硬链接信息
+        """
+        sync_class = ""
+        link_path = ""
+        link_direction = ""
+        # 获取所有硬链接的同步目录设置
+        sync_dirs = Sync().get_filehardlinks_sync_dirs()
+        # 按设置遍历检查目录是否是同步目录或在同步目录内  
+        for dir in sync_dirs:
+            if dir[0] and (dir[0] == folder or folder.startswith(f"{dir[0]}/")):
+                result, sync_class, link_path, link_direction = match_sync_dir(folder, dir[0], dir[1], dir[2], '→')
+                if result: break
+            elif dir[1] and (dir[1] == folder or folder.startswith(f"{dir[1]}/")):
+                result, sync_class, link_path, link_direction = match_sync_dir(folder, dir[1], dir[0], dir[2], '←')
+                if result: break
+        return sync_class, link_path, link_direction
+    
+
+    def add_paths_to_media_dirs(paths, media_dirs):
+        """
+        添加路径到媒体目录列表。
+
+        :param paths: 待添加的路径列表
+        :param media_dirs: 媒体目录列表
+        """
+        if not paths:
+            return
+
+        valid_paths = [pathElement.rstrip('/') for pathElement in paths if StringUtils.is_string_and_not_empty(pathElement)]
+        media_dirs.extend(valid_paths)
+
+    def get_media_dirs():
+        """
+        获取媒体库目录
+        """
+        media_dirs = []
+        movie_path = Config().get_config('media').get('movie_path')
+        tv_path = Config().get_config('media').get('tv_path')
+        anime_path = Config().get_config('media').get('anime_path')
+        unknown_path = Config().get_config('media').get('unknown_path')
+        add_paths_to_media_dirs(movie_path, media_dirs)
+        add_paths_to_media_dirs(tv_path, media_dirs)
+        add_paths_to_media_dirs(anime_path, media_dirs)
+        add_paths_to_media_dirs(unknown_path, media_dirs)  
+        return list(set(media_dirs))
+    
+    def get_download_dirs():
+        # 获取下载目录
+        return [path.rstrip('/') for path in Downloader().get_download_visit_dirs()]
+    
     r = ['<ul class="jqueryFileTree" style="display: none;">']
     try:
         r = ['<ul class="jqueryFileTree" style="display: none;">']
         in_dir = unquote(request.form.get('dir'))
-        ft = request.form.get("filter")
+        only_folders = request.form.get("onlyFolders")
         if not in_dir or in_dir == "/":
             if SystemUtils.get_system() == OsType.WINDOWS:
                 partitions = SystemUtils.get_windows_drives()
@@ -1062,20 +1146,36 @@ def dirlist():
                     dirs = [os.path.join("C:/", f) for f in os.listdir("C:/")]
             else:
                 dirs = [os.path.join("/", f) for f in os.listdir("/")]
+        elif in_dir == "*SYNC-FOLDERS*":
+            sync_dirs = []
+            for id, conf in Sync().get_sync_path_conf().items():
+                sync_dirs.append(conf["from"])
+                sync_dirs.append(conf["to"])
+            dirs = list(set(sync_dirs))
+        elif in_dir == "*DOWNLOAD-FOLDERS*":
+            dirs = get_download_dirs()
+        elif in_dir == "*MEDIA-FOLDERS*":
+            dirs = get_media_dirs()
         else:
             d = os.path.normpath(urllib.parse.unquote(in_dir))
             if not os.path.isdir(d):
                 d = os.path.dirname(d)
             dirs = [os.path.join(d, f) for f in os.listdir(d)]
+        dirs.sort()
         for ff in dirs:
             f = os.path.basename(ff)
             if not f:
                 f = ff
             if os.path.isdir(ff):
-                r.append('<li class="directory collapsed"><a rel="%s/">%s</a></li>' % (
-                    ff.replace("\\", "/"), f.replace("\\", "/")))
+                # 对硬链接同步目录进行标识处理
+                sync_class, link_path, link_direction = get_hardlink_info(ff)
+                # 获取文件夹路径的MD5存为id，用于前端选择后更新文件夹硬链接同步标识
+                folder_class = "media-folder" if ff in get_media_dirs() else "download-folder" if ff in get_download_dirs() else ""
+                path = ff.replace("\\", "/") + "/"
+                r.append('<li class="directory %s %s collapsed"><a rel="%s">%s%s%s</a></li>' % (
+                    folder_class, sync_class, path, f.replace("\\", "/"), link_direction, link_path))
             else:
-                if ft != "HIDE_FILES_FILTER":
+                if not only_folders:
                     e = os.path.splitext(f)[1][1:]
                     r.append('<li class="file ext_%s"><a rel="%s">%s</a></li>' % (
                         e, ff.replace("\\", "/"), f.replace("\\", "/")))
@@ -1603,7 +1703,7 @@ def upload():
         files = request.files['file']
         temp_path = Config().get_temp_path()
         if not os.path.exists(temp_path):
-            os.makedirs(temp_path)
+            os.makedirs(temp_path, exist_ok=True)
         file_path = Path(temp_path) / files.filename
         files.save(str(file_path))
         return {"code": 0, "filepath": str(file_path)}
@@ -1663,15 +1763,19 @@ def Img():
     if_none_match = request.headers.get('If-None-Match')
     if if_none_match and if_none_match == etag:
         return make_response('', 304)
+    
     # 获取图片数据
-    response = Response(
-        WebUtils.request_cache(url),
-        mimetype='image/jpeg'
-    )
-    response.headers.set('Cache-Control', 'max-age=604800')
-    response.headers.set('Etag', etag)
-    return response
-
+    try:
+      img = WebUtils.request_cache(url)
+      response = Response(
+          img,
+          mimetype='image/jpeg'
+      )
+      response.headers.set('Cache-Control', 'max-age=604800')
+      response.headers.set('Etag', etag)
+      return response
+    except:
+      return make_response("图片加载失败", 400)
 
 @App.route('/stream-logging')
 @login_required
@@ -1679,6 +1783,7 @@ def stream_logging():
     """
     实时日志EventSources响应
     """
+
     def __logging(_source=""):
         """
         实时日志
@@ -1712,6 +1817,7 @@ def stream_progress():
     """
     实时日志EventSources响应
     """
+
     def __progress(_type):
         """
         实时日志
@@ -1735,7 +1841,11 @@ def message_handler(ws):
     消息中心WebSocket
     """
     while True:
-        data = ws.receive()
+        try:
+            data = ws.receive(timeout=10)
+        except ConnectionClosed:
+            print("WebSocket连接已关闭！")
+            break
         if not data:
             continue
         try:

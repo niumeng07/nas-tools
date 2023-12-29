@@ -12,6 +12,8 @@ import time
 from math import floor
 from pathlib import Path
 from urllib.parse import unquote
+import ast
+import copy
 
 import cn2an
 from flask_login import logout_user, current_user
@@ -24,7 +26,7 @@ from app.downloader import Downloader
 from app.filetransfer import FileTransfer
 from app.filter import Filter
 from app.helper import DbHelper, ProgressHelper, ThreadHelper, \
-    MetaHelper, DisplayHelper, WordsHelper, IndexerHelper
+    MetaHelper, DisplayHelper, WordsHelper
 from app.helper import RssHelper, PluginHelper
 from app.indexer import Indexer
 from app.media import Category, Media, Bangumi, DouBan, Scraper
@@ -46,7 +48,7 @@ from app.utils.types import RmtMode, OsType, SearchType, SyncType, MediaType, Mo
     EventType, SystemConfigKey, RssType
 from config import RMT_MEDIAEXT, RMT_SUBEXT, RMT_AUDIO_TRACK_EXT, Config
 from web.backend.search_torrents import search_medias_for_web, search_media_by_message
-from web.backend.user import User
+from web.backend.pro_user import ProUser
 from web.backend.web_utils import WebUtils
 
 
@@ -101,6 +103,7 @@ class WebAction:
             "truncate_rsshistory": self.truncate_rsshistory,
             "add_brushtask": self.__add_brushtask,
             "del_brushtask": self.__del_brushtask,
+            "brushtask_enable": self.__brushtask_enable,
             "brushtask_detail": self.__brushtask_detail,
             "update_brushtask_state": self.__update_brushtask_state,
             "name_test": self.__name_test,
@@ -123,6 +126,7 @@ class WebAction:
             "refresh_process": self.refresh_process,
             "restory_backup": self.__restory_backup,
             "start_mediasync": self.__start_mediasync,
+            "start_mediaDisplayModuleSync": self.__start_mediaDisplayModuleSync,
             "mediasync_state": self.__mediasync_state,
             "get_tvseason_list": self.__get_tvseason_list,
             "get_userrss_task": self.__get_userrss_task,
@@ -164,14 +168,18 @@ class WebAction:
             "get_tv_rss_list": self.get_tv_rss_list,
             "get_rss_history": self.get_rss_history,
             "get_transfer_history": self.get_transfer_history,
+            "truncate_transfer_history": self.truncate_transfer_history,
             "get_unknown_list": self.get_unknown_list,
             "get_unknown_list_by_page": self.get_unknown_list_by_page,
+            "truncate_transfer_unknown": self.truncate_transfer_unknown,
             "get_customwords": self.get_customwords,
             "get_users": self.get_users,
             "get_filterrules": self.get_filterrules,
             "get_downloading": self.get_downloading,
             "test_site": self.__test_site,
             "get_sub_path": self.__get_sub_path,
+            "get_filehardlinks": self.__get_filehardlinks,
+            "get_dirhardlink": self.__get_dirhardlink,
             "rename_file": self.__rename_file,
             "delete_files": self.__delete_files,
             "download_subtitle": self.__download_subtitle,
@@ -233,6 +241,7 @@ class WebAction:
             "get_category_config": self.get_category_config,
             "get_system_processes": self.get_system_processes,
             "run_plugin_method": self.run_plugin_method,
+            "get_library_resume": self.__get_resume,
         }
         # 远程命令响应
         self._commands = {
@@ -311,8 +320,6 @@ class WebAction:
 
     @staticmethod
     def start_service():
-        # 加载索引器配置
-        IndexerHelper()
         # 加载站点配置
         SiteConf()
         # 启动虚拟显示
@@ -759,6 +766,7 @@ class WebAction:
         episode_part = data.get("episode_part")
         episode_offset = data.get("episode_offset")
         min_filesize = data.get("min_filesize")
+        ignore_download_history = data.get("ignore_download_history")
         if mtype in MovieTypes:
             media_type = MediaType.MOVIE
         elif mtype in TvTypes:
@@ -782,7 +790,8 @@ class WebAction:
                                                     need_fix_all=need_fix_all,
                                                     min_filesize=min_filesize,
                                                     tmdbid=tmdbid,
-                                                    season=season)
+                                                    season=season,
+                                                    ignore_download_history=ignore_download_history)
         if succ_flag:
             if not need_fix_all and not logid:
                 # 更新记录状态
@@ -808,6 +817,7 @@ class WebAction:
         episode_part = data.get("episode_part")
         episode_offset = data.get("episode_offset")
         min_filesize = data.get("min_filesize")
+        ignore_download_history = data.get("ignore_download_history")
         if mtype in MovieTypes:
             media_type = MediaType.MOVIE
         elif mtype in TvTypes:
@@ -825,7 +835,8 @@ class WebAction:
                                                     episode_offset=episode_offset,
                                                     min_filesize=min_filesize,
                                                     tmdbid=tmdbid,
-                                                    season=season)
+                                                    season=season,
+                                                    ignore_download_history=ignore_download_history)
         if succ_flag:
             return {"retcode": 0, "retmsg": "转移成功"}
         else:
@@ -843,7 +854,8 @@ class WebAction:
                           min_filesize=None,
                           tmdbid=None,
                           season=None,
-                          need_fix_all=False
+                          need_fix_all=False,
+                          ignore_download_history=False
                           ):
         """
         开始手工转移文件
@@ -873,7 +885,8 @@ class WebAction:
                                                                                  episode_offset),
                                                                    need_fix_all),
                                                                min_filesize=min_filesize,
-                                                               udf_flag=True)
+                                                               udf_flag=True,
+                                                               ignore_download_history=ignore_download_history)
         else:
             # 按识别的信息转移
             succ_flag, ret_msg = FileTransfer().transfer_media(in_from=SyncType.MAN,
@@ -888,7 +901,8 @@ class WebAction:
                                                                                  episode_offset),
                                                                    need_fix_all),
                                                                min_filesize=min_filesize,
-                                                               udf_flag=True)
+                                                               udf_flag=True,
+                                                               ignore_download_history=ignore_download_history)
         return succ_flag, ret_msg
 
     def delete_history(self, data):
@@ -1116,8 +1130,10 @@ class WebAction:
                                   cookie=cookie,
                                   note=note,
                                   rss_uses=rss_uses)
-
-        return {"code": ret}
+        if ret:
+            return {"code": "200"}
+        else:
+            return {"code": "400", "msg": "更新数据库失败，请重试"}
 
     @staticmethod
     def __get_site(data):
@@ -1275,6 +1291,7 @@ class WebAction:
         compatibility = data.get("compatibility")
         rename = data.get("rename")
         enabled = data.get("enabled")
+        locating = data.get("locating")
 
         _sync = Sync()
 
@@ -1312,7 +1329,8 @@ class WebAction:
                                mode=mode,
                                compatibility=compatibility,
                                rename=rename,
-                               enabled=enabled)
+                               enabled=enabled,
+                               locating=locating)
         return {"code": 0, "msg": ""}
 
     @staticmethod
@@ -1358,6 +1376,9 @@ class WebAction:
                 _sync.check_source(sid=sid)
             _sync.check_sync_paths(sid=sid, enabled=1 if checked else 0)
             return {"code": 0}
+        elif flag == "locating":
+            _sync.check_sync_paths(sid=sid, locating=1 if checked else 0)
+            return {"code": 0}        
         else:
             return {"code": 1}
 
@@ -1697,9 +1718,9 @@ class WebAction:
             pris = data.get("pris")
             if isinstance(pris, list):
                 pris = ",".join(pris)
-            ret = User().add_user(name, password, pris)
+            ret = ProUser().add_user(name, password, pris)
         else:
-            ret = User().delete_user(name)
+            ret = ProUser().delete_user(name)
 
         if ret == 1 or ret:
             return {"code": 0, "success": False}
@@ -1931,6 +1952,8 @@ class WebAction:
         brushtask_state = data.get("brushtask_state")
         brushtask_rssurl = data.get("brushtask_rssurl")
         brushtask_label = data.get("brushtask_label")
+        brushtask_up_limit = data.get("brushtask_up_limit")
+        brushtask_dl_limit = data.get("brushtask_dl_limit")
         brushtask_savepath = data.get("brushtask_savepath")
         brushtask_transfer = 'Y' if data.get("brushtask_transfer") else 'N'
         brushtask_sendmessage = 'Y' if data.get(
@@ -1983,6 +2006,8 @@ class WebAction:
             "downloader": brushtask_downloader,
             "seed_size": brushtask_totalsize,
             "label": brushtask_label,
+            "up_limit": brushtask_up_limit,
+            "dl_limit": brushtask_dl_limit,
             "savepath": brushtask_savepath,
             "transfer": brushtask_transfer,
             "state": brushtask_state,
@@ -2035,6 +2060,14 @@ class WebAction:
         except Exception as e:
             ExceptionUtils.exception_traceback(e)
             return {"code": 1, "msg": "刷流任务设置失败"}
+
+    @staticmethod
+    def __brushtask_enable():
+        """
+        刷流任务可用状态
+        """
+        isBeyondOneMonth = SiteUserInfo().is_min_join_date_beyond_one_month()
+        return {"code": 0, "isBeyondOneMonth": isBeyondOneMonth}
 
     def __name_test(self, data):
         """
@@ -2378,16 +2411,10 @@ class WebAction:
             sort = params.get("sort") or "R"
             # 选中的分类
             tags = params.get("tags") or ""
-            # 选中的地区
-            region = params.get("region") or ""
-            # 选中的年代
-            period = params.get("period") or ""
             # 过滤参数
             res_list = DouBan().get_douban_disover(mtype=mtype,
                                                    sort=sort,
                                                    tags=tags,
-                                                   region=region,
-                                                   period=period,
                                                    page=CurrentPage)
 
         # 补充存在与订阅状态
@@ -2586,6 +2613,15 @@ class WebAction:
         return {"code": 1, "msg": "文件不存在"}
 
     @staticmethod
+    def __get_resume(data):
+        """
+        获得继续观看
+        """
+        num = data.get("num") or 12
+        # 实测，plex 似乎无法按照数目返回，此处手动切片
+        return { "code": 0, "list": MediaServer().get_resume(num)[0:num] }
+
+    @staticmethod
     def __start_mediasync(data):
         """
         开始媒体库同步
@@ -2594,6 +2630,33 @@ class WebAction:
         SystemConfig().set(key=SystemConfigKey.SyncLibrary, value=librarys)
         ThreadHelper().start_thread(MediaServer().sync_mediaserver, ())
         return {"code": 0}
+
+    @staticmethod
+    def __start_mediaDisplayModuleSync(data):
+        """
+        开始媒体库同步
+        """
+        selectedData = data.get("selected") or []
+        unselectedData = data.get("unselected") or []
+        try:
+            selectedModules = [ast.literal_eval(item) for item in selectedData]
+            if selectedModules:
+                for module in selectedModules:
+                    module["selected"] = True
+
+            unselectedModules = [ast.literal_eval(item) for item in unselectedData]
+            if unselectedModules:
+                for module in unselectedModules:
+                    module["selected"] = False
+
+            modules = selectedModules + unselectedModules
+            sorted_modules = sorted(modules, key=lambda x: x["id"])
+            sorted_modules_str = json.dumps(sorted_modules, ensure_ascii=False, indent=4)
+            log.debug(f"【我的媒体库】元数据: {sorted_modules_str}")
+            SystemConfig().set(key=SystemConfigKey.LibraryDisplayModule, value=sorted_modules)
+            return {"code": 0}
+        except Exception as e:
+            return {"code": 1}
 
     @staticmethod
     def __mediasync_state():
@@ -2782,7 +2845,7 @@ class WebAction:
 
     @staticmethod
     def list_site_resources(data):
-        resources = Indexer().list_resources(index_id=data.get("id"),
+        resources = Indexer().list_resources(url=data.get("site"),
                                              page=data.get("page"),
                                              keyword=data.get("keyword"))
         if not resources:
@@ -3532,6 +3595,9 @@ class WebAction:
                 "value": f"{item.UPLOAD_VOLUME_FACTOR} {item.DOWNLOAD_VOLUME_FACTOR}",
                 "name": MetaBase.get_free_string(item.UPLOAD_VOLUME_FACTOR, item.DOWNLOAD_VOLUME_FACTOR)
             }
+            #分辨率
+            if respix == "":
+                respix = "未知分辨率"
             # 制作组、字幕组
             if item.OTHERINFO is None:
                 releasegroup = "未知"
@@ -3589,6 +3655,8 @@ class WebAction:
                     torrent_filter["free"].append(free_item)
                 if releasegroup not in torrent_filter.get("releasegroup"):
                     torrent_filter["releasegroup"].append(releasegroup)
+                if respix not in torrent_filter.get("respix"):
+                    torrent_filter["respix"].append(respix)
                 if item.SITE not in torrent_filter.get("site"):
                     torrent_filter["site"].append(item.SITE)
                 if video_encode \
@@ -3639,6 +3707,7 @@ class WebAction:
                         "site": [item.SITE],
                         "free": [free_item],
                         "releasegroup": [releasegroup],
+                        "respix": [respix],
                         "video": [video_encode] if video_encode else [],
                         "season": [filter_season] if filter_season else []
                     }
@@ -3699,13 +3768,16 @@ class WebAction:
         return {"code": 0, "result": [rec.as_dict() for rec in Rss().get_rss_history(rtype=mtype)]}
 
     @staticmethod
-    def get_downloading():
+    def get_downloading(data = {}):
         """
         查询正在下载的任务
         """
+        dl_id = data.get("id")
+        force_list = data.get("force_list")
         MediaHander = Media()
         DownloaderHandler = Downloader()
-        torrents = DownloaderHandler.get_downloading_progress()
+        torrents = DownloaderHandler.get_downloading_progress(downloader_id=dl_id, force_list=bool(force_list))
+        
         for torrent in torrents:
             # 先查询下载记录，没有再识别
             name = torrent.get("name")
@@ -3783,6 +3855,16 @@ class WebAction:
         }
 
     @staticmethod
+    def truncate_transfer_history():
+        """
+        清空媒体整理历史记录
+        """
+        if FileTransfer().get_transfer_history_count() < 1:
+            return { "code": 0, "result": True }
+        FileTransfer().truncate_transfer_history_list()
+        return { "code": 0, "result": True }
+
+    @staticmethod
     def get_unknown_list():
         """
         查询所有未识别记录
@@ -3851,6 +3933,16 @@ class WebAction:
             "pageNum": PageNum,
             "currentPage": CurrentPage
         }
+
+    @staticmethod
+    def truncate_transfer_unknown(): 
+        """
+        清空媒体手动整理历史记录
+        """
+        if FileTransfer().get_transfer_unknown_count() < 1:
+            return { "code": 0, "result": True }
+        FileTransfer().truncate_transfer_unknown_list()
+        return { "code": 0, "result": True }
 
     @staticmethod
     def unidentification():
@@ -3931,7 +4023,7 @@ class WebAction:
         """
         查询所有用户
         """
-        user_list = User().get_users()
+        user_list = ProUser().get_users()
         Users = []
         for user in user_list:
             pris = str(user.PRIS).split(",")
@@ -4018,6 +4110,25 @@ class WebAction:
                                 for f in os.listdir("C:/")]
                 else:
                     dirs = [os.path.join("/", f) for f in os.listdir("/")]
+            elif d == "*SYNC-FOLDERS*":
+                sync_dirs = []
+                for id, conf in Sync().get_sync_path_conf().items():
+                    sync_dirs.append(conf["from"])
+                    sync_dirs.append(conf["to"])
+                dirs = list(set(sync_dirs))
+            elif d == "*DOWNLOAD-FOLDERS*":
+                dirs = [path.rstrip('/') for path in Downloader().get_download_visit_dirs()]
+            elif d == "*MEDIA-FOLDERS*":
+                media_dirs = []
+                movie_path = Config().get_config('media').get('movie_path')
+                tv_path = Config().get_config('media').get('tv_path')
+                anime_path = Config().get_config('media').get('anime_path')
+                unknown_path = Config().get_config('media').get('unknown_path')
+                if movie_path is not None: media_dirs.extend([path.rstrip('/') for path in movie_path])
+                if tv_path is not None: media_dirs.extend([path.rstrip('/') for path in tv_path])
+                if anime_path is not None: media_dirs.extend([path.rstrip('/') for path in anime_path])
+                if unknown_path is not None: media_dirs.extend([path.rstrip('/') for path in unknown_path])   
+                dirs = list(set(media_dirs))             
             else:
                 d = os.path.normpath(unquote(d))
                 if not os.path.isdir(d):
@@ -4066,6 +4177,93 @@ class WebAction:
             "data": r
         }
 
+    @staticmethod
+    def __get_filehardlinks(data):
+        """
+        获取文件硬链接
+        """            
+        def parse_hardlinks(hardlinks):
+            paths = []
+            for link in hardlinks:
+                paths.append([SystemUtils.shorten_path(link["file"], 'left', 2), link["file"], link["filepath"]])      
+            return paths
+        r = {}
+        try:
+            file = data.get("filepath")
+            direction = ""
+            hardlinks = []
+            # 获取所有硬链接的同步目录设置
+            sync_dirs = Sync().get_filehardlinks_sync_dirs()  
+            # 按设置遍历检查文件是否在同步目录内，只查找第一个匹配项，多余的忽略
+            for dir in sync_dirs:
+                if dir[0] and file.startswith(f"{dir[0]}/"):
+                    direction = '→'
+                    hardlinks = parse_hardlinks(SystemUtils().find_hardlinks(file=file, fdir=dir[1]))
+                    break
+                elif dir[1] and file.startswith(f"{dir[1]}/"):
+                    direction = '←'
+                    hardlinks = parse_hardlinks(SystemUtils().find_hardlinks(file=file, fdir=dir[0]))
+                    break     
+            r={
+                "filepath": file,  # 文件路径
+                "direction": direction,  # 同步方向
+                "hardlinks": hardlinks  # 同步链接，内容分别为缩略路径、文件路径、目录路径
+            }
+        except Exception as e:
+            ExceptionUtils.exception_traceback(e)
+            return {
+                "code": -1,
+                "message": '加载路径失败: %s' % str(e)
+            }
+        return {
+            "code": 0,
+            "count": len(r),
+            "data": r
+        }
+        
+    @staticmethod
+    def __get_dirhardlink(data):
+        """
+        获取同步目录硬链接
+        """            
+        r = {}
+        try:
+            path = data.get("dirpath")
+            direction = ""
+            hardlink = []
+            locating = False
+            # 获取所有硬链接的同步目录设置
+            sync_dirs = Sync().get_filehardlinks_sync_dirs()    
+            # 按设置遍历检查目录是否是同步目录或在同步目录内             
+            for dir in sync_dirs:
+                if dir[0] and (dir[0] == path or path.startswith(f"{dir[0]}/")):
+                    direction = '→'
+                    hardlink = dir[0].replace(dir[0], dir[1])
+                    locating = dir[2]
+                    break
+                elif dir[1] and (dir[1] == path or path.startswith(f"{dir[1]}/")):
+                    direction = '←'
+                    hardlink = dir[1].replace(dir[1], dir[0])
+                    locating = dir[2]
+                    break
+            r={
+                "dirpath": path,  # 同步目录路径
+                "direction": direction,  # 同步方向
+                "hardlink": hardlink,  # 同步链接，内容为配置中对应的目录或子目录
+                "locating": locating  # 自动定位
+            }
+        except Exception as e:
+            ExceptionUtils.exception_traceback(e)
+            return {
+                "code": -1,
+                "message": '加载路径失败: %s' % str(e)
+            }
+        return {
+            "code": 0,
+            "count": len(r),
+            "data": r
+        }
+        
     @staticmethod
     def __rename_file(data):
         """
@@ -4255,7 +4453,7 @@ class WebAction:
         """
         获取索引器
         """
-        return {"code": 0, "indexers": Indexer().get_user_indexer_dict()}
+        return {"code": 0, "indexers": Indexer().get_indexer_dict()}
 
     @staticmethod
     def __get_download_dirs(data):
@@ -4732,251 +4930,8 @@ class WebAction:
         """
         # 需要过滤的菜单
         ignore = []
-        # 查询最早加入PT站的时间, 如果不足一个月, 则隐藏刷流任务
-        # first_pt_site = SiteUserInfo().get_pt_site_min_join_date()
-        # if not first_pt_site or not StringUtils.is_one_month_ago(first_pt_site):
-        #     ignore.append('brushtask')
         # 获取可用菜单
-        # menus = current_user.get_usermenus(ignore=ignore)
-        menus = [
-            {
-                'name': '我的媒体库',
-                'level': 1,
-                'page': 'index',
-                'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><polyline points="5 12 3 12 12 3 21 12 19 12"></polyline><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path></svg>\n                    '
-            },
-            {
-                'name': '探索',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '榜单推荐',
-                        'level': 1,
-                        'page': 'ranking',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-align-box-bottom-center" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M9 15v2"></path><path d="M12 11v6"></path><path d="M15 13v4"></path></svg>'
-                    }, {
-                        'name': '豆瓣电影',
-                        'level': 1,
-                        'page': 'douban_movie',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-movie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 4l0 16"></path><path d="M16 4l0 16"></path><path d="M4 8l4 0"></path><path d="M4 16l4 0"></path><path d="M4 12l16 0"></path><path d="M16 8l4 0"></path><path d="M16 16l4 0"></path></svg>'
-                    }, {
-                        'name': '豆瓣电视剧',
-                        'level': 1,
-                        'page': 'douban_tv',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-tv" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path><path d="M16 3l-4 4l-4 -4"></path></svg>'
-                    }, {
-                        'name': 'TMDB电影',
-                        'level': 1,
-                        'page': 'tmdb_movie',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-movie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 4l0 16"></path><path d="M16 4l0 16"></path><path d="M4 8l4 0"></path><path d="M4 16l4 0"></path><path d="M4 12l16 0"></path><path d="M16 8l4 0"></path><path d="M16 16l4 0"></path></svg>'
-                    }, {
-                        'name': 'TMDB电视剧',
-                        'level': 1,
-                        'page': 'tmdb_tv',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-tv" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path><path d="M16 3l-4 4l-4 -4"></path></svg>'
-                    }, {
-                        'name': 'BANGGUMI',
-                        'level': 1,
-                        'page': 'bangumi',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-tv-old" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path><path d="M16 3l-4 4l-4 -4"></path><path d="M15 7v13"></path><path d="M18 15v.01"></path><path d="M18 12v.01"></path></svg>'
-                    },
-                ],
-            },
-            {
-                'name': '资源搜索',
-                'level': 1,
-                'page': 'search',
-                'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><circle cx="10" cy="10" r="7"></circle><line x1="21" y1="21" x2="15" y2="15"></line></svg>'
-            },
-            {
-                'name': '站点管理',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '站点维护',
-                        'level': 1,
-                        'page': 'site',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-server-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><rect x="3" y="4" width="18" height="8" rx="3"></rect><rect x="3" y="12" width="18" height="8" rx="3"></rect><line x1="7" y1="8" x2="7" y2="8.01"></line><line x1="7" y1="16" x2="7" y2="16.01"></line><path d="M11 8h6"></path><path d="M11 16h6"></path></svg>'
-                    },
-                    {
-                        'name': '数据统计',
-                        'level': 1,
-                        'page': 'statistics',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chart-pie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-6.8a2 2 0 0 1 -2 -2v-7a.9 .9 0 0 0 -1 -.8"></path><path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a1 1 0 0 1 -1 -1v-4.5"></path></svg>'
-                    },
-                    {
-                        'name': '刷流任务',
-                        'level': 1,
-                        'page': 'brushtask',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check-list" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9.615 20h-2.615a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8"></path><path d="M14 19l2 2l4 -4"></path><path d="M9 8h4"></path><path d="M9 12h2"></path></svg>'
-                    },
-                    {
-                        'name': '站点资源',
-                        'level': 1,
-                        'page': 'sitelist',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-cloud-computing" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M6.657 16c-2.572 0 -4.657 -2.007 -4.657 -4.483c0 -2.475 2.085 -4.482 4.657 -4.482c.393 -1.762 1.794 -3.2 3.675 -3.773c1.88 -.572 3.956 -.193 5.444 1c1.488 1.19 2.162 3.007 1.77 4.769h.99c1.913 0 3.464 1.56 3.464 3.486c0 1.927 -1.551 3.487 -3.465 3.487h-11.878"></path><path d="M12 16v5"></path><path d="M16 16v4a1 1 0 0 0 1 1h4"></path><path d="M8 16v4a1 1 0 0 1 -1 1h-4"></path></svg>'
-                    }
-                ]
-            },
-            {
-                'name': '订阅管理',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '电影订阅',
-                        'level': 1,
-                        'page': 'movie_rss',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-movie" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 4l0 16"></path><path d="M16 4l0 16"></path><path d="M4 8l4 0"></path><path d="M4 16l4 0"></path><path d="M4 12l16 0"></path><path d="M16 8l4 0"></path><path d="M16 16l4 0"></path></svg>'
-                    },
-                    {
-                        'name': '电视剧订阅',
-                        'level': 1,
-                        'page': 'tv_rss',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-tv" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 7m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v9a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z"></path><path d="M16 3l-4 4l-4 -4"></path></svg>'
-                    },
-                    {
-                        'name': '自定义订阅',
-                        'level': 1,
-                        'page': 'user_rss',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-rss" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M14 3v4a1 1 0 0 0 1 1h4"></path><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path><path d="M12 17a3 3 0 0 0 -3 -3"></path><path d="M15 17a6 6 0 0 0 -6 -6"></path><path d="M9 17h.01"></path></svg>'
-                    },
-                    {
-                        'name': '订阅日历',
-                        'level': 1,
-                        'page': 'rss_calendar',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 5m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M16 3l0 4"></path><path d="M8 3l0 4"></path><path d="M4 11l16 0"></path><path d="M11 15l1 0"></path><path d="M12 15l0 3"></path></svg>'
-                    }
-                ]
-            },
-            {
-                'name': '下载管理',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '正在下载',
-                        'level': 1,
-                        'page': 'downloading',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-loader" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M12 6l0 -3"></path><path d="M16.25 7.75l2.15 -2.15"></path><path d="M18 12l3 0"></path><path d="M16.25 16.25l2.15 2.15"></path><path d="M12 18l0 3"></path><path d="M7.75 16.25l-2.15 2.15"></path><path d="M6 12l-3 0"></path><path d="M7.75 7.75l-2.15 -2.15"></path></svg>'
-                    },
-                    {
-                        'name': '近期下载',
-                        'level': 1,
-                        'page': 'downloaded',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>'
-                    },
-                ]
-            },
-            {
-                'name': '媒体整理',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '文件管理',
-                        'level': 1,
-                        'page': 'mediafile',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-pencil" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>  <path d="M10 18l5 -5a1.414 1.414 0 0 0 -2 -2l-5 5v2h2z"></path></svg>'
-                    },
-                    {
-                        'name': '手动识别',
-                        'level': 1,
-                        'page': 'unidentification',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-accessible" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"></path>  <path d="M10 16.5l2 -3l2 3m-2 -3v-2l3 -1m-6 0l3 1"></path>  <circle cx="12" cy="7.5" r=".5" fill="currentColor"></circle></svg>'
-                    },
-                    {
-                        'name': '历史记录',
-                        'level': 1,
-                        'page': 'history',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-history" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M12 8l0 4l2 2"></path>  <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path></svg>'
-                    },
-                    {
-                        'name': 'TMDB缓存',
-                        'level': 1,
-                        'page': 'tmdbcache',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-headlessui" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M6.744 4.325l7.82 -1.267a4.456 4.456 0 0 1 5.111 3.686l1.267 7.82a4.456 4.456 0 0 1 -3.686 5.111l-7.82 1.267a4.456 4.456 0 0 1 -5.111 -3.686l-1.267 -7.82a4.456 4.456 0 0 1 3.686 -5.111z"></path>  <path d="M7.252 7.704l7.897 -1.28a1 1 0 0 1 1.147 .828l.36 2.223l-9.562 3.51l-.67 -4.134a1 1 0 0 1 .828 -1.147z"></path></svg>'
-                    }
-                ]
-            },
-            {
-                'name': '服务',
-                'level': 1,
-                'page': 'service',
-                'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><rect x="4" y="4" width="6" height="5" rx="2"></rect><rect x="4" y="13" width="6" height="7" rx="2"></rect><rect x="14" y="4" width="6" height="7" rx="2"></rect><rect x="14" y="15" width="6" height="5" rx="2"></rect></svg>\n                    '
-            },
-            {
-                'name': '系统设置',
-                'also': '设置',
-                'level': 1,
-                'list': [
-                    {
-                        'name': '基础设置',
-                        'level': 1,
-                        'page': 'basic',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-settings" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>'
-                    },
-                    {
-                        'name': '用户管理',
-                        'level': 1,
-                        'page': 'users',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path></svg>'
-                    },
-                    {
-                        'name': '媒体库',
-                        'level': 1,
-                        'page': 'library',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-stereo-glasses" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M8 3h-2l-3 9"></path>  <path d="M16 3h2l3 9"></path>  <path d="M3 12v7a1 1 0 0 0 1 1h4.586a1 1 0 0 0 .707 -.293l2 -2a1 1 0 0 1 1.414 0l2 2a1 1 0 0 0 .707 .293h4.586a1 1 0 0 0 1 -1v-7h-18z"></path>  <path d="M7 16h1"></path>  <path d="M16 16h1"></path></svg>'
-                    },
-                    {
-                        'name': '目录同步',
-                        'level': 1,
-                        'page': 'directorysync',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-refresh" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>  <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path></svg>'
-                    },
-                    {
-                        'name': '消息通知',
-                        'level': 1,
-                        'page': 'notification',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-bell" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M10 5a2 2 0 0 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"></path><path d="M9 17v1a3 3 0 0 0 6 0v-1"></path></svg>'
-                    },
-                    {
-                        'name': '过滤规则',
-                        'level': 1,
-                        'page': 'filterrule',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-filter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M5.5 5h13a1 1 0 0 1 .5 1.5l-5 5.5l0 7l-4 -3l0 -4l-5 -5.5a1 1 0 0 1 .5 -1.5"></path></svg>'
-                    },
-                    {
-                        'name': '自定义识别词',
-                        'level': 1,
-                        'page': 'customwords',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-a-b" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>  <path d="M3 16v-5.5a2.5 2.5 0 0 1 5 0v5.5m0 -4h-5"></path>  <path d="M12 6l0 12"></path>  <path d="M16 16v-8h3a2 2 0 0 1 0 4h-3m3 0a2 2 0 0 1 0 4h-3"></path></svg>'
-                    },
-                    {
-                        'name': '索引器',
-                        'level': 1,
-                        'page': 'indexer',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M15 15m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path><path d="M18.5 18.5l2.5 2.5"></path><path d="M4 6h16"></path><path d="M4 12h4"></path><path d="M4 18h4"></path></svg>'
-                    },
-                    {
-                        'name': '下载器',
-                        'level': 1,
-                        'page': 'downloader',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-download" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path><path d="M7 11l5 5l5 -5"></path><path d="M12 4l0 12"></path></svg>'
-                    },
-                    {
-                        'name': '媒体服务器',
-                        'level': 1,
-                        'page': 'mediaserver',
-                        'page': 'mediaserver',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-server-cog" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M3 4m0 3a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v2a3 3 0 0 1 -3 3h-12a3 3 0 0 1 -3 -3z"></path><path d="M12 20h-6a3 3 0 0 1 -3 -3v-2a3 3 0 0 1 3 -3h10.5"></path><path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path><path d="M18 14.5v1.5"></path><path d="M18 20v1.5"></path><path d="M21.032 16.25l-1.299 .75"></path><path d="M16.27 19l-1.3 .75"></path><path d="M14.97 16.25l1.3 .75"></path><path d="M19.733 19l1.3 .75"></path><path d="M7 8v.01"></path><path d="M7 16v.01"></path></svg>'
-                    },
-                    {
-                        'name': '插件',
-                        'level': 1,
-                        'page': 'plugin',
-                        'icon': '<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-codesandbox" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>   <path d="M20 7.5v9l-4 2.25l-4 2.25l-4 -2.25l-4 -2.25v-9l4 -2.25l4 -2.25l4 2.25z"></path>   <path d="M12 12l4 -2.25l4 -2.25"></path>   <path d="M12 12l0 9"></path>   <path d="M12 12l-4 -2.25l-4 -2.25"></path>   <path d="M20 12l-4 2v4.75"></path>   <path d="M4 12l4 2l0 4.75"></path>   <path d="M8 5.25l4 2.25l4 -2.25"></path></svg>'
-                    }
-                ]
-            }
-        ]
+        menus = current_user.get_usermenus(ignore=ignore)
         return {
             "code": 0,
             "menus": menus,
@@ -5001,27 +4956,12 @@ class WebAction:
         if data:
             site = data.get("site")
             params = data.get("params")
-            log.error(f"====debug==== data: {str(data)}, site: {str(site)}, params: {str(params)}")
         else:
-            UserSiteAuthParams = SystemConfig().get(SystemConfigKey.UserSiteAuthParams)
-            if UserSiteAuthParams:
-                site = UserSiteAuthParams.get("site")
-                params = UserSiteAuthParams.get("params")
-                log.error(f"====debug==== if data return false: {str(data)}, site: {str(site)}, params: {str(params)}")
-            else:
-                log.error(f"====debug==== if data return false and return 1")
-                return {"code": 1, "msg": "参数错误"}
-        # state, msg = User().check_user(site, params)
-        # if state:
-        # 保存认证数据
-        log.error(f"====debug==== SystemConfig.set {str(SystemConfigKey.UserSiteAuthParams)}, site: {str(site)}, params: {str(params)}")
-        SystemConfig().set(key=SystemConfigKey.UserSiteAuthParams,
-                           value={
-                               "site": site,
-                               "params": params
-                           })
-        return {"code": 0, "msg": "认证成功"}
-        # return {"code": 1, "msg": f"{msg or '认证失败，请检查合作站点账号是否正常！'}"}
+            site, params = None, {}
+        state, msg = ProUser().check_user(site, params)
+        if state:
+            return {"code": 0, "msg": "认证成功"}
+        return {"code": 1, "msg": f"{msg or '认证失败，请检查合作站点账号是否正常！'}"}
 
     @staticmethod
     def __update_downloader(data):
@@ -5094,8 +5034,29 @@ class WebAction:
         """
         获取下载器
         """
+        def add_is_default(dl_conf, defualt_id):
+            dl_conf["is_default"] = str(dl_conf["id"]) == defualt_id
+            return dl_conf
+        
         did = data.get("did")
-        return {"code": 0, "detail": Downloader().get_downloader_conf(did=did)}
+        downloader = Downloader()
+        resp = downloader.get_downloader_conf(did=did)
+        default_dl_id = downloader.default_downloader_id
+
+        if did:
+            """
+              单个下载器 conf
+            """
+            return {"code": 0, "detail": add_is_default(copy.deepcopy(resp), default_dl_id) if resp else None}
+        else:
+            """
+              所有下载器 conf
+            """
+            confs = copy.deepcopy(resp)
+            for key in confs:
+                add_is_default(confs[key], default_dl_id)
+
+            return {"code": 0, "detail": confs}
 
     @staticmethod
     def __test_downloader(data):

@@ -167,9 +167,8 @@
               <div class="col-lg">
                 <div class="mb-3">
                   <label class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="app.releases_update_only" {% if
-                      Config.app.releases_update_only %}checked{% endif %}>
-                    <span class="form-check-label">仅检查Releases更新 <span class="form-help" title="开启后，只有Releases更新，才会有更新提示" data-bs-toggle="tooltip">?</span></span>
+                    <input class="form-check-input" type="checkbox" id="app.releases_update_only" {% if Config.app.releases_update_only %}checked{% endif %}>
+                    <span class="form-check-label">仅检查Release更新 <span class="form-help" title="开启后，只有Release更新才会有更新提示" data-bs-toggle="tooltip">?</span></span>
                   </label>
                 </div>
               </div>
@@ -214,15 +213,10 @@
               <div class="col-lg">
                 <div class="mb-3">
                   <label class="form-label required">TMDB API Url <span class="form-help"
-                                                                    title="选择访问TMDB API时使用的地址，api.themoviedb.org、api.tmdb.org为官方地址，其余为使用代理中转，如无法连接TMDB匹配媒体信息时可偿试更换"
+                                                                    title="填写TMDB API时使用的地址域名即可，api.themoviedb.org、api.tmdb.org为官方地址，也可自行替换代理的TMDB地址"
                                                                     data-bs-toggle="tooltip">?</span></label>
-                  <select class="form-select" id="app.tmdb_domain">
-                    {% for domain in TmdbDomains %}
-                    <option value="{{ domain }}" {% if Config.app.tmdb_domain==domain %}selected{% endif %}>
-                      {{ domain }}
-                    </option>
-                    {% endfor %}
-                  </select>
+                  <input type="text" value="{% if Config.app %}{{ Config.app.tmdb_domain or '' }}{% endif %}" class="form-control"
+                         id="app.tmdb_domain" placeholder="api.tmdb.org" autocomplete="off">
                 </div>
               </div>
               <div class="col-lg">
@@ -409,29 +403,74 @@
                   </label>
                 </div>
               </div>
-            </div>
+              <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="media.ffmpeg_video_meta" {% if
+                      Config.media.ffmpeg_video_meta %}checked{% endif %}>
+                    <span class="form-check-label">刮削视频元数据 <span class="form-help"
+                                                                        title="开启后，通过ffmpeg获取视频文件真实的元数据，将会大幅增加转移时间，低配置机器不建议开启"
+                                                                        data-bs-toggle="tooltip">?</span></span>
+                  </label>
+                </div>
+              </div>
           </div>
-          <div class="card-footer">
-            <div class="row align-items-center">
-              <div class="col-auto">
-                <a href="javascript:void(0)" class="btn d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-scraper">
-                  刮削设置
-                </a>
-                <a href="javascript:void(0)" class="btn d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-scraper" title="刮削设置">
-                  {{ SVG.slideshow() }}
-                </a>
+          <div class="row">
+            <div class="col-lg">
+              <div class="mb-3">
+                <label class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="media.filename_prefer_barre" {% if
+                    Config.media.filename_prefer_barre %}checked{% endif %}>
+                  <span class="form-check-label">使用横杠替换冒号 <span class="form-help"
+                                                                      title="开启后，文件名中的中英文冒号将替换为横杠"
+                                                                      data-bs-toggle="tooltip">?</span></span>
+                </label>
               </div>
-              <div class="col"></div>
-              <div class="col-auto">
-                <a id="basic_media_btn" href="javascript:save_basic_config('basic_media')" class="btn btn-primary">
-                  保存
-                </a>
-              </div>
+            </div>
+            <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="media.tmdb_include_adult"
+                           {% if Config.media.tmdb_include_adult %}checked{% endif %}>
+                    <span class="form-check-label">搜索结果中包含成人内容条目 <span class="form-help"
+                                                                          title="开启该选项后将会在刮削或者检索时包含成人内容，请谨慎打开"
+                                                                          data-bs-toggle="tooltip">?</span></span>
+                  </label>
+                </div>
+            </div>
+            <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="media.name_follow_tmdb_changed"
+                           {% if Config.media.name_follow_tmdb_changed %}checked{% endif %}>
+                    <span class="form-check-label">已整理媒体名称跟随TMDB变化 <span class="form-help"
+                                                                          title="开启则会一直与TMDB同步但是会创建多个文件夹；关闭后将会保持与TMDB信息改变之前的名称一致，不会再创建新文件夹"
+                                                                          data-bs-toggle="tooltip">?</span></span>
+                  </label>
+                </div>
             </div>
           </div>
         </div>
+          <div class="card-footer">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <a href="javascript:void(0)" class="btn d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-scraper">
+                            刮削设置
+                        </a>
+                        <a href="javascript:void(0)" class="btn d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-scraper" title="刮削设置">
+                            {{ SVG.slideshow() }}
+                        </a>
+                    </div>
+                    <div class="col"></div>
+                    <div class="col-auto">
+                        <a id="basic_media_btn" href="javascript:save_basic_config('basic_media')" class="btn btn-primary">
+                            保存
+                        </a>
+                    </div>
+                </div>
+            </div>
       </div>
-      {% if CurrentUser.level >= 2 %}
+      </div>
       <div class="col-md-12">
         <div class="card" id="basic_service">
           <div class="card-header">
@@ -499,6 +538,17 @@
                   </label>
                 </div>
               </div>
+              <div class="col-xl">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="pt.force_enable_brush" {% if
+                      Config.pt.force_enable_brush %}checked{% endif %}>
+                    <span class="form-check-label">强制开启刷流 <span class="form-help"
+                                                                                title="开启后将会允许无视新人一个月考核期强制刷流，由此开关引发的问题，将不进行维护，谨慎使用(开启即同意与本项目无关，愿意自行承担后续风险)"
+                                                                                data-bs-toggle="tooltip">?</span></span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <div class="card-footer">
@@ -513,7 +563,6 @@
           </div>
         </div>
       </div>
-    {% endif %}
       <div class="col-md-12">
         <div class="card" id="security">
           <div class="card-header">
@@ -609,7 +658,54 @@
           </div>
         </div>
       </div>
-      {% if CurrentUser.level >= 2 %}
+      <div class="col-md-12">
+        <div class="card" id="advanced_ocr">
+          <div class="card-header">
+            <h3 class="card-title"><strong>OCR</strong></h3>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-label">自定义OCR 后端地址 <span class="form-help"
+                                                                   title="默认使用 https://github.com/jxxghp/MoviePilot-OCR 自建OCR本地后端，用于辅助站点签到验证码识别，需要添加http/https，如果baidu ocr填写优先使用baidu"
+                                                                   data-bs-toggle="tooltip">?</span></label>
+                  <input type="text" value="{% if Config.ocr.custom_ocr_url %}{{ Config.ocr.custom_ocr_url or '' }}{% endif %}" class="form-control"
+                         id="ocr.custom_ocr_url" placeholder="" autocomplete="off">
+                </div>
+              </div>
+              <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-label">Baidu OCR API Key <span class="form-help"
+                                                                   title="BaiduOCR的api key，可去 https://console.bce.baidu.com/ 申请, 在 https://console.bce.baidu.com/ai/#/ai/ocr/app/list 查看, 该项可辅助站点签到验证码识别"
+                                                                   data-bs-toggle="tooltip">?</span></label>
+                  <input type="text" value="{% if Config.ocr.baiduocr_api_key %}{{ Config.ocr.baiduocr_api_key or '' }}{% endif %}" class="form-control"
+                         id="ocr.baiduocr_api_key" placeholder="" autocomplete="off">
+                </div>
+              </div>
+              <div class="col-lg">
+                <div class="mb-3">
+                  <label class="form-label">Baidu OCR Secret Key <span class="form-help"
+                                                                   title="BaiduOCR的secret key，可去 https://console.bce.baidu.com/ 申请, 在 https://console.bce.baidu.com/ai/#/ai/ocr/app/list 查看, 该项可辅助站点签到验证码识别"
+                                                                   data-bs-toggle="tooltip">?</span></label>
+                  <input type="text" value="{% if Config.ocr.baiduocr_secret_key %}{{ Config.ocr.baiduocr_secret_key or '' }}{% endif %}" class="form-control"
+                         id="ocr.baiduocr_secret_key" placeholder="" autocomplete="off">
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="row align-items-center">
+              <div class="col"></div>
+              <div class="col-auto">
+                <a id="advanced_ocr_btn" href="javascript:save_basic_config('advanced_ocr')" class="btn btn-primary">
+                  保存
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="col-md-12">
         <div class="card" id="laboratory">
           <div class="card-header">
@@ -617,6 +713,15 @@
           </div>
           <div class="card-body">
             <div class="row">
+              <div class="col-12 col-xl-12">
+                    <div class="mb-3">
+                      <label class="form-label">Telegram Bot Api 代理<span class="form-help"
+                                                                            title="使用Cloudflare Worker搭建Telegram Bot Api 代理, 配置教程：https://www.yuque.com/u21363723/nt6hcz/whq99ankmn87arcq?singleDoc"
+                                                                            data-bs-toggle="tooltip">?</span></label>
+                      <input type="text" value="{% if Config.laboratory %}{{ Config.laboratory.telegram_domain or '' }}{% endif %}" class="form-control"
+                             id="laboratory.telegram_domain" placeholder="https://api.telegram.org" autocomplete="off">
+                </div>
+              </div>
               <div class="col-12 col-xl-3">
                 <div class="mb-3">
                   <label class="form-check form-switch">
@@ -648,6 +753,18 @@
                       Config.laboratory and Config.laboratory.chatgpt_enable %}checked{% endif %}>
                     <span class="form-check-label">ChatGPT增强识别 <span class="form-help"
                                                                   title="开启后，通过TMDB的API无法识别到媒体信息时，使用ChatGPT识别匹配，需要先填写OpenAI API Key"
+                                                                  data-bs-toggle="tooltip">?</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-xl-3">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="laboratory.recognize_enhance_enable" {% if
+                      Config.laboratory and Config.laboratory.recognize_enhance_enable %}checked{% endif %}>
+                    <span class="form-check-label">增强识别V2 <span class="form-help"
+                                                                  title="开启后，会使用增强识别V2功能去识别，优先级最高"
                                                                   data-bs-toggle="tooltip">?</span>
                     </span>
                   </label>
@@ -688,6 +805,30 @@
                   </label>
                 </div>
               </div>
+              <div class="col-12 col-xl-3">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="laboratory.show_more_sites" {% if
+                      Config.laboratory and Config.laboratory.show_more_sites %}checked{% endif %}>
+                    <span class="form-check-label">展示更多站点 <span class="form-help"
+                                                                            title="开启后会展示更多内置站点"
+                                                                            data-bs-toggle="tooltip">?</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div class="col-12 col-xl-3">
+                <div class="mb-3">
+                  <label class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="laboratory.simplify_library_notification" {% if
+                      Config.laboratory and Config.laboratory.simplify_library_notification %}checked{% endif %}>
+                    <span class="form-check-label">简化入库推送通知 <span class="form-help"
+                                                                            title="开启后会简化入库推送通知"
+                                                                            data-bs-toggle="tooltip">?</span>
+                    </span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <div class="card-footer">
@@ -702,7 +843,6 @@
           </div>
         </div>
       </div>
-    {% endif %}
     </div>
   </div>
 </div>

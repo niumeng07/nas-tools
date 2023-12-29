@@ -222,6 +222,22 @@ class DbHelper:
         """
         self._db.query(TRANSFERHISTORY).filter(TRANSFERHISTORY.ID == int(logid)).delete()
 
+
+    @DbPersist(_db)
+    def get_transfer_history_count(self):
+        """
+        转移历史记录总条数
+        """
+        return self._db.query(TRANSFERHISTORY).count()
+
+    @DbPersist(_db)
+    def truncate_transfer_history_list(self):
+        """
+        清空所有转移历史记录
+        """
+        return self._db.query(TRANSFERHISTORY).delete() and \
+        self._db.query(TRANSFERBLACKLIST).delete()
+
     def get_transfer_unknown_paths(self):
         """
         查询未识别的记录列表
@@ -286,6 +302,25 @@ class DbHelper:
         if not path:
             return []
         return self._db.query(TRANSFERUNKNOWN).filter(TRANSFERUNKNOWN.PATH == path).all()
+
+    @DbPersist(_db)
+    def get_transfer_unknown_count(self):
+        """
+        手动转移历史记录总条数
+        """
+        return self._db.query(TRANSFERUNKNOWN).count()
+
+    def truncate_transfer_unknown_list(self):
+        """
+        清空所有手动转移历史记录
+        """
+        unknown_paths = self.get_transfer_unknown_paths()
+        
+        if not unknown_paths:
+            return True
+        
+        results = [self.delete_transfer_unknown(item.ID) for item in unknown_paths if item.ID]
+        return all(results)
 
     def is_transfer_unknown_exists(self, path):
         """
@@ -1607,6 +1642,8 @@ class DbHelper:
                 INTEVAL=item.get('interval'),
                 DOWNLOADER=item.get('downloader'),
                 LABEL=item.get('label'),
+                UP_LIMIT=item.get('up_limit'),
+                DL_LIMIT=item.get('dl_limit'),
                 SAVEPATH=item.get('savepath'),
                 TRANSFER=item.get('transfer'),
                 DOWNLOAD_COUNT=0,
@@ -1630,6 +1667,8 @@ class DbHelper:
                     "INTEVAL": item.get('interval'),
                     "DOWNLOADER": item.get('downloader'),
                     "LABEL": item.get('label'),
+                    "UP_LIMIT": item.get('up_limit'),
+                    "DL_LIMIT": item.get('dl_limit'),
                     "SAVEPATH": item.get('savepath'),
                     "TRANSFER": item.get('transfer'),
                     "STATE": item.get('state'),
@@ -2276,7 +2315,7 @@ class DbHelper:
             return False
 
     @DbPersist(_db)
-    def insert_config_sync_path(self, source, dest, unknown, mode, compatibility, rename, enabled, note=None):
+    def insert_config_sync_path(self, source, dest, unknown, mode, compatibility, rename, enabled, locating, note=None):
         """
         增加目录同步
         """
@@ -2288,6 +2327,7 @@ class DbHelper:
             COMPATIBILITY=int(compatibility),
             RENAME=int(rename),
             ENABLED=int(enabled),
+            LOCATING=int(locating),
             NOTE=note
         ))
 
@@ -2309,7 +2349,7 @@ class DbHelper:
         return self._db.query(CONFIGSYNCPATHS).order_by(CONFIGSYNCPATHS.SOURCE).all()
 
     @DbPersist(_db)
-    def check_config_sync_paths(self, sid=None, compatibility=None, rename=None, enabled=None):
+    def check_config_sync_paths(self, sid=None, compatibility=None, rename=None, enabled=None, locating=None):
         """
         设置目录同步状态
         """
@@ -2331,7 +2371,13 @@ class DbHelper:
                     "COMPATIBILITY": int(compatibility)
                 }
             )
-
+        elif sid and locating is not None:
+            self._db.query(CONFIGSYNCPATHS).filter(CONFIGSYNCPATHS.ID == int(sid)).update(
+                {
+                    "LOCATING": int(locating)
+                }
+            )
+            
     @DbPersist(_db)
     def delete_download_setting(self, sid):
         """
@@ -2492,7 +2538,7 @@ class DbHelper:
             INTERVAL=int(interval),
             ENABLED=int(enabled),
             SAMEDATA=int(samedata),
-            ONLYNASTOOL=int(onlynastool),
+            ONLY_NASTOOL=int(onlynastool),
             DOWNLOADER=downloader,
             CONFIG=json.dumps(config),
             NOTE=note

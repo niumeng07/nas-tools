@@ -40,7 +40,7 @@ class PluginManager:
         # config/plugins 是插件py文件目录，config/plugins/xxx是插件数据目录
         self.user_plugin_path = Config().get_user_plugin_path()
         if not os.path.exists(self.user_plugin_path):
-            os.makedirs(self.user_plugin_path)
+            os.makedirs(self.user_plugin_path, exist_ok=True)
         self.system_plugin_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "modules")
         if os.path.exists(self.user_plugin_path):
             for plugin_file in PathUtils.get_dir_level1_files(self.user_plugin_path, [".py"]):
@@ -105,10 +105,8 @@ class PluginManager:
         )
         # 排序
         plugins.sort(key=lambda x: x.module_order if hasattr(x, "module_order") else 0)
-        log.info(f"插件列表: {plugins}")
         # 用户已安装插件列表
         user_plugins = self.systemconfig.get(SystemConfigKey.UserInstalledPlugins) or []
-        log.info(f"用户已安装插件列表: {user_plugins}")
         self._running_plugins = {}
         self._plugins = {}
         for plugin in plugins:

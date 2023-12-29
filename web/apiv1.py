@@ -7,7 +7,7 @@ from app.sites import Sites
 from app.utils import TokenCache
 from config import Config
 from web.action import WebAction
-from web.backend.user import User
+from web.backend.pro_user import ProUser
 from web.security import require_auth, login_required, generate_access_token
 
 apiv1_bp = Blueprint("apiv1",
@@ -87,7 +87,7 @@ class UserLogin(Resource):
         password = args.get('password')
         if not username or not password:
             return {"code": 1, "success": False, "message": "用户名或密码错误"}
-        user_info = User().get_user(username)
+        user_info = ProUser().get_user(username)
         if not user_info:
             return {"code": 1, "success": False, "message": "用户名或密码错误"}
         # 校验密码
@@ -123,7 +123,7 @@ class UserInfo(ClientResource):
         """
         args = self.parser.parse_args()
         username = args.get('username')
-        user_info = User().get_user(username)
+        user_info = ProUser().get_user(username)
         if not user_info:
             return {"code": 1, "success": False, "message": "用户名不正确"}
         return {
@@ -590,12 +590,16 @@ class DownloadHistory(ClientResource):
 
 @download.route('/now')
 class DownloadNow(ClientResource):
-    @staticmethod
-    def post():
+    parser = reqparse.RequestParser()
+    parser.add_argument('id', type=int, help='下载器 id', location='form', required=False)
+    parser.add_argument('force_list', type=bool, help='强制列出所有下载任务', location='form', required=False)
+
+    @download.doc(parser=parser)
+    def post(self):
         """
         查询正在下载的任务
         """
-        return WebAction().api_action(cmd='get_downloading')
+        return WebAction().api_action(cmd='get_downloading', data=self.parser.parse_args())
 
 
 @download.route('/config/info')
@@ -912,6 +916,17 @@ class LibraryPlayHistory(ClientResource):
         """
         return WebAction().api_action(cmd='get_library_playhistory')
 
+@library.route('/mediaserver/resume')
+class LibraryResume(ClientResource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('num', type=int, help='返回记录数', location='form', required=True)
+
+    @library.doc(parser=parser)
+    def post(self):
+        """
+        查询媒体库继续观看列表
+        """
+        return WebAction().api_action(cmd='get_library_resume', data=self.parser.parse_args())
 
 @library.route('/mediaserver/statistics')
 class LibraryStatistics(ClientResource):
@@ -2131,6 +2146,30 @@ class SyncRun(ApiResource):
         return WebAction().api_action(cmd='sch', data={"item": "sync"})
 
 
+@sync.route('/file/hardlinks')
+class SystemFileHardlinks(ClientResource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('filepath', type=str, help='路径', location='form', required=True)
+    @system.doc(parser=parser)
+    def post(self):
+        """
+        查询文件的硬链接
+        """
+        return WebAction().api_action(cmd='get_filehardlinks', data=self.parser.parse_args())
+
+
+@sync.route('/directory/hardlink')
+class SystemDirectoryHardlink(ClientResource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('dirpath', type=str, help='路径', location='form', required=True)
+    @system.doc(parser=parser)
+    def post(self):
+        """
+        查询目录的硬链接
+        """
+        return WebAction().api_action(cmd='get_dirhardlink', data=self.parser.parse_args())
+    
+    
 @message.route('/client/update')
 class MessageClientUpdate(ClientResource):
     parser = reqparse.RequestParser()

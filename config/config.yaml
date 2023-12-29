@@ -101,6 +101,14 @@ media:
   default_rmt_mode: copy
   # 默认TMDB信息语种
   tmdb_language: zh
+  # 【搜索结果中包含成人内容条目】：需要先去TMDB个人设置中将<搜索结果中包含成人内容条目>选项开启，开启该选项后将会在刮削或者检索时包含成人内容
+  tmdb_include_adult: false
+  # 【使用横杠替换冒号】：如开启，文件名中的中英文冒号将替换为横杠
+  filename_prefer_barre: false
+  # 【获取视频元数据】：如开启，视频文件名不包含视频元数据的情况，则会通过ffmpeg获取，将会大幅增加转移时间，低配置机器不建议开启
+  ffmpeg_video_meta: false
+  # 【已整理媒体名称跟随TMDB变化】：开启则会一直与TMDB同步但是会创建多个文件夹；关闭后将会保持与TMDB信息改变之前的名称一致，不会再创建新文件夹
+  name_follow_tmdb_changed: true
 
 # 配置Emby服务器信息
 emby:
@@ -151,6 +159,8 @@ pt:
   download_order: site
   # 【搜索结果数量限制】：每个站点返回搜索结果的最大数量
   site_search_result_num: 100
+  # 【强制开启刷流】：一般情况需要新人在考核期摸索完PT规则才可以开启刷流，开启后将会允许无视该规则强制刷流
+  force_enable_brush: false
 
 # 【openai】
 openai:
@@ -158,6 +168,15 @@ openai:
   api_key:
   # 【openai api url】：自定义openai请求地址
   api_url:
+
+# 【OCR】
+ocr:
+  # 【custom_ocr_url】: 默认使用 https://github.com/jxxghp/MoviePilot-OCR 自建OCR本地后端，用于辅助站点签到验证码识别，需要添加http/https，如果baidu ocr填写优先使用baidu
+  custom_ocr_url:
+  # 【baiduocr api key】: BaiduOCR的api key，如果需要正常使用，需要在申请后去 https://console.bce.baidu.com/ai/#/ai/ocr/overview/resource/getFree 领取免费额度
+  baiduocr_api_key:
+  # 【baiduocr secret key】: BaiduOCR的secret key，如果需要正常使用，需要在申请后去 https://console.bce.baidu.com/ai/#/ai/ocr/overview/resource/getFree 领取免费额度
+  baiduocr_secret key:
 
 # 【配置安全】
 security:
@@ -180,15 +199,23 @@ security:
 
 # 【实验室】
 laboratory:
-  # 【识别增强】关键字猜想
+  # 【识别增强】：关键字猜想
   search_keyword: false
-  # 【WEB识别增强】通过TMDB WEB检索
-  search_tmdbweb: false
+  # 【WEB识别增强】：通过TMDB WEB检索
+  search_tmdbweb: true
   # 【ChatGPT识别增强】通过ChatGPT识别文件名
   chatgpt_enable: false
+  # 【增强识别V2】：开启后会使用增强识别V2识别，优先级最高，关闭后将使用原版的识别方式识别
+  recognize_enhance_enable: true
   # 【TMDB缓存过期策略】：是否开启TMDB缓存过期策略，默认7天过期，过期缓存将被删除,  7天内访问过期时间可以被刷新
   tmdb_cache_expire: true
   # 【默认搜索豆瓣资源】：开启将使用豆瓣进行电影电视剧的名称搜索，否则使用TMDB的数据
   use_douban_titles: false
   # 【精确搜索使用英文名称】：开启后对于精确搜索场景（远程搜索、订阅搜索等）将会使用英文名检索站点资源以提升匹配度，但对有些站点资源标题全是中文的则需要关闭，否则匹配不到
   search_en_title: false
+  # 【显示更多内置站点】：开启后会展示更多内置站点，有些需要手动进行映射
+  show_more_sites: true
+  # 【入库通知精简】：开启后会简化入库推送通知
+  simplify_library_notification: false
+  # 《使用Cloudflare Worker搭建Telegram Bot Api 代理》https://www.yuque.com/u21363723/nt6hcz/whq99ankmn87arcq?singleDoc
+  telegram_domain:

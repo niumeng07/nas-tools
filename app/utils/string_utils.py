@@ -3,15 +3,17 @@ import datetime
 import hashlib
 import random
 import re
+import os
 from urllib import parse
 
 import cn2an
 import dateparser
 import dateutil.parser
+import zhconv
 
 from app.utils.exception_utils import ExceptionUtils
 from app.utils.types import MediaType
-
+from config import Config
 
 class StringUtils:
 
@@ -107,7 +109,31 @@ class StringUtils:
             else:
                 return False
         return True
+    @staticmethod
+    def is_eng_media_name_format(word):
+        pattern = r'^[a-zA-Z]+[a-zA-Z0-9\s._:@!@]*$'
+        return bool(re.match(pattern, word))
 
+    @staticmethod
+    def is_int_or_float(word):
+        """
+        判断是否是整型或浮点型的格式
+        """
+        if not word:
+            return None
+        pattern = r'^[-+]?\d+(\.\d+)?$'
+        return re.match(pattern, word) is not None
+
+    @staticmethod
+    def is_string_and_not_empty(word):
+        """
+        判断是否是字符串并且字符串是否为空
+        """
+        if isinstance(word, str) and word.strip():
+            return True
+        else:
+            return False
+            
     @staticmethod
     def xstr(s):
         """
@@ -150,7 +176,11 @@ class StringUtils:
         if not text:
             return 0.0
         try:
-            float_val = float(text.strip().replace(',', ''))
+            text = text.strip().replace(',', '')
+            if text:
+                float_val = float(text)
+            else:
+                float_val = 0.0
         except Exception as e:
             ExceptionUtils.exception_traceback(e)
         return float_val
@@ -269,9 +299,28 @@ class StringUtils:
 
     @staticmethod
     def clear_file_name(name):
+        """
+        去除文件中的特殊字符
+        """
         if not name:
             return None
-        return re.sub(r"[*?\\/\"<>~|]", "", name, flags=re.IGNORECASE).replace(":", "：")
+
+        replacement_dict = {
+            r"[*?\\/\"<>~|,，？]": "",
+            r"[\s]+": " ",
+        }
+
+        cleaned_name = name
+        for pattern, replacement in replacement_dict.items():
+            cleaned_name = re.sub(pattern, replacement, cleaned_name, flags=re.IGNORECASE).strip()
+
+        media = Config().get_config('media')
+        filename_prefer_barre = media.get("filename_prefer_barre", False) or False
+        if filename_prefer_barre:
+            cleaned_name = cleaned_name.replace(":", " - ").replace("：", " - ")
+        else:
+            cleaned_name = cleaned_name.replace(":", "：")
+        return cleaned_name
 
     @staticmethod
     def get_keyword_from_string(content):
@@ -439,6 +488,30 @@ class StringUtils:
         return hashlib.md5(str(data).encode()).hexdigest()
 
     @staticmethod
+    def md5_hash_file(file_path):
+        """
+        MD5 HASH 指定文件
+        """
+        if not os.path.exists(file_path):
+            return ""
+        md5_hash = hashlib.md5()
+        with open(file_path, "rb") as file:
+            while chunk := file.read(8192):
+                md5_hash.update(chunk)
+        return md5_hash.hexdigest()
+
+    @staticmethod
+    def verify_integrity(file_path, original_md5):
+        """
+        校验文件是否匹配指定的md5
+        """
+        md5 = StringUtils.md5_hash_file(file_path)
+        if not StringUtils.is_string_and_not_empty(md5) or \
+        not StringUtils.is_string_and_not_empty(original_md5):
+            return True
+        return md5 == original_md5
+
+    @staticmethod
     def str_timehours(minutes):
         """
         将分钟转换成小时和分钟
@@ -545,3 +618,27 @@ class StringUtils:
             return True
         else:
             return False
+
+    @staticmethod
+    def is_chinese_word(string: str, mode: int = 1):
+        """
+        判断是否包含中文
+        :param string 需要判断的字符
+        :param mode 模式 1匹配简体和繁体 2只匹配简体 3只匹配繁体
+        :return True or False
+        """
+        for ch in string:
+            if mode == 1:
+                if "\u4e00" <= ch <= "\u9FFF":
+                    return True
+            elif mode == 2:
+                if "\u4e00" <= ch <= "\u9FFF":
+                    if zhconv.convert(ch, "zh-cn") == ch:
+                        return True
+            elif mode == 3:
+                if "\u4e00" <= ch <= "\u9FFF":
+                    if zhconv.convert(ch, "zh-cn") != ch:
+                        return True
+        if re.search(pattern="^[0-9]+$", string=string):
+            return True
+        return False

@@ -4,11 +4,13 @@ import tempfile
 from functools import reduce
 from threading import Lock
 
+import requests
 import undetected_chromedriver as uc
 from webdriver_manager.chrome import ChromeDriverManager
 
+import log
 import app.helper.cloudflare_helper as CloudflareHelper
-from app.utils import SystemUtils, RequestUtils
+from app.utils import SystemUtils, RequestUtils, ExceptionUtils
 from config import Config
 
 lock = Lock()
@@ -41,7 +43,12 @@ class ChromeHelper(object):
         if not uc.find_chrome_executable():
             return
         global driver_executable_path
-        driver_executable_path = ChromeDriverManager().install()
+        try:
+            download_webdriver_path = ChromeDriverManager().install()
+            SystemUtils.chmod755(download_webdriver_path)
+            driver_executable_path = download_webdriver_path
+        except Exception as err:
+             ExceptionUtils.exception_traceback(err)
 
     @property
     def browser(self):

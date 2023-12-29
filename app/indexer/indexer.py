@@ -6,8 +6,8 @@ from app.helper import ProgressHelper, SubmoduleHelper, DbHelper
 from app.utils import ExceptionUtils, StringUtils
 from app.utils.commons import singleton
 from app.utils.types import SearchType, IndexerType, ProgressKey
+from app.sites import Sites
 from config import Config
-
 
 @singleton
 class Indexer(object):
@@ -28,8 +28,7 @@ class Indexer(object):
     def init_config(self):
         self.progress = ProgressHelper()
         self.dbhelper = DbHelper()
-        indexer = Config().get_config("pt").get('search_indexer') or 'builtin'
-        self._client = self.__get_client(indexer)
+        self._client = self.__get_client('builtin')
         if self._client:
             self._client_type = self._client.get_type()
 
@@ -42,24 +41,42 @@ class Indexer(object):
                 ExceptionUtils.exception_traceback(e)
         return None
 
-    def get_indexers(self, check=False):
+    def get_indexers(self, check=False, public=True):
         """
         获取当前索引器的索引站点
         """
         if not self._client:
             return []
-        return self._client.get_indexers(check=check)
+        return self._client.get_indexers(check=check, public=public)
 
-    def get_user_indexer_dict(self):
+    def get_indexer(self, url):
+        """
+        获取索引器的信息
+        """
+        if not self._client:
+            return None
+        return self._client.get_indexer(url)
+
+    def get_indexer_dict(self, check=True, public=True, plugins=True):
         """
         获取用户已经选择的索引器字典
         """
-        return [
-            {
-                "id": index.id,
-                "name": index.name
-            } for index in self.get_indexers(check=True)
-        ]
+        indexers_dicts = []
+        for indexer in self.get_indexers(check=check, public=public):
+            if indexer:
+                if plugins:
+                    indexers_dicts.append({"id": indexer.id,
+                                           "name": indexer.name,
+                                           "domain": StringUtils.get_url_domain(indexer.domain),
+                                           "public": indexer.public})
+                else:
+                    sites = Sites().get_sites(siteurl=indexer.domain)
+                    if sites:
+                        indexers_dicts.append({"id": indexer.id,
+                                           "name": indexer.name,
+                                           "domain": StringUtils.get_url_domain(indexer.domain),
+                                           "public": indexer.public})
+        return indexers_dicts
 
     def get_indexer_hash_dict(self):
         """
@@ -81,14 +98,14 @@ class Indexer(object):
         """
         return [indexer.name for indexer in self.get_indexers(check=True)]
 
-    def list_resources(self, index_id, page=0, keyword=None):
+    def list_resources(self, url, page=0, keyword=None):
         """
         获取内置索引器的资源列表
-        :param index_id: 内置站点ID
+        :param url: 站点URL
         :param page: 页码
         :param keyword: 搜索关键字
         """
-        return self._client.list(index_id=index_id, page=page, keyword=keyword)
+        return self._client.list(url=url, page=page, keyword=keyword)
 
     def __get_client(self, ctype: [IndexerType, str], conf=None):
         return self.__build_class(ctype=ctype, conf=conf)
@@ -124,6 +141,16 @@ class Indexer(object):
             return []
 
         indexers = self.get_indexers(check=True)
+        """
+        const filters = {
+            "site": search_site,
+            "restype": search_restype,
+            "pix": search_pix,
+            "sp_state": sp_state,
+            "rule": search_rule
+        };
+        """
+        # FIXME: 需要根据filters里site是否None，如果不为None，需要找出指定的indexer进行搜索匹配 @hsuyelin@163.com
         if not indexers:
             log.error("没有配置索引器，无法搜索！")
             return []
