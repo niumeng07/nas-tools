@@ -36,7 +36,7 @@ class TorrentTransfer(_IPluginModule):
     # 加载顺序
     module_order = 20
     # 可使用的用户级别
-    user_level = 2
+    user_level = 1
 
     # 私有属性
     _scheduler = None

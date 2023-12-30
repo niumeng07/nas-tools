@@ -24,7 +24,7 @@ class Webhook(_IPluginModule):
     # 加载顺序
     module_order = 4
     # 可使用的用户级别
-    user_level = 2
+    user_level = 1
 
     # 私有属性
     _save_tmp_path = None

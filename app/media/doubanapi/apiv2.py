@@ -146,7 +146,7 @@ class DoubanApi(object):
         "api-client/1 com.douban.frodo/7.1.0(205) Android/29 product/perseus vendor/Xiaomi model/Mi MIX 3  rom/miui6  network/wifi  platform/mobile nd/1",
         "api-client/1 com.douban.frodo/7.3.0(207) Android/22 product/MI 9 vendor/Xiaomi model/MI 9 brand/Android  rom/miui6  network/wifi platform/mobile nd/1"]
     _api_secret_key = "bf7dddc7c9cfe6f7"
-    _api_key = "054022eaeae0b00e0fc068c0c0a2102a"
+    _api_key = "0dad551ec0f84ed02907ff5c42e8ec70"
     _base_url = "https://frodo.douban.com/api/v2"
     _session = requests.Session()
 
@@ -172,19 +172,10 @@ class DoubanApi(object):
         ts = params.pop('_ts', int(datetime.strftime(datetime.now(), '%Y%m%d')))
         params.update({'os_rom': 'android', 'apiKey': cls._api_key, '_ts': ts, '_sig': cls.__sign(url=req_url, ts=ts)})
 
-        headers = {'User-Agent': 'MicroMessenger/',
-                   'Referer': 'https://servicewechat.com/wx2f9b06c1de1ccfca/91/page-frame.html'}
+        headers = {'User-Agent': choice(cls._user_agents)}
         resp = RequestUtils(headers=headers, session=cls._session).get_res(url=req_url, params=params)
 
-        resp_json = resp.json() if resp else {}
-        resp_json_str = json.dumps(resp_json)
-        if StringUtils.is_string_and_not_empty(resp_json_str):
-            resp_json_str = re.sub(r'qnmob\d+', 'img1', resp_json_str)
-
-        try:
-            return json.loads(resp_json_str)
-        except json.JSONDecodeError as e:
-            return {}
+        return resp.json() if resp else {}
 
     def search(self, keyword, start=0, count=20, ts=datetime.strftime(datetime.now(), '%Y%m%d')):
         return self.__invoke(self._urls["search"], q=keyword, start=start, count=count, _ts=ts)
@@ -243,11 +234,27 @@ class DoubanApi(object):
     def movie_top250(self, start=0, count=20, ts=datetime.strftime(datetime.now(), '%Y%m%d')):
         return self.__invoke(self._urls["movie_top250"], start=start, count=count, _ts=ts)
 
-    def movie_recommend(self, tags='', sort='R', start=0, count=20, ts=datetime.strftime(datetime.now(), '%Y%m%d')):
-        return self.__invoke(self._urls["movie_recommend"], tags=tags, sort=sort, start=start, count=count, _ts=ts)
+    def movie_recommend(
+            self, tags='', sort='R', region='', period='', start=0, count=20, ts=datetime.strftime(
+                datetime.now(),
+                '%Y%m%d')):
+        tags = [tags, region, period]
+        tags = [tag for tag in tags if tag != '' and tag is not None]
+        tags = ','.join(tags)
+        return self.__invoke(
+            self._urls["movie_recommend"],
+            tags=tags, sort=sort, start=start, count=count, _ts=ts)
 
-    def tv_recommend(self, tags='', sort='R', start=0, count=20, ts=datetime.strftime(datetime.now(), '%Y%m%d')):
-        return self.__invoke(self._urls["tv_recommend"], tags=tags, sort=sort, start=start, count=count, _ts=ts)
+    def tv_recommend(
+            self, tags='', sort='R', region='', period='', start=0, count=20, ts=datetime.strftime(
+                datetime.now(),
+                '%Y%m%d')):
+        tags = [tags, region, period]
+        tags = [tag for tag in tags if tag != '' and tag is not None]
+        tags = ','.join(tags)
+        return self.__invoke(
+            self._urls["tv_recommend"],
+            tags=tags, sort=sort, start=start, count=count, _ts=ts)
 
     def tv_chinese_best_weekly(self, start=0, count=20, ts=datetime.strftime(datetime.now(), '%Y%m%d')):
         return self.__invoke(self._urls["tv_chinese_best_weekly"], start=start, count=count, _ts=ts)

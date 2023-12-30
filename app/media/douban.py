@@ -31,7 +31,7 @@ class DouBan:
         self.doubanapi = DoubanApi()
         self.doubanweb = DoubanWeb()
         try:
-            res = RequestUtils(referer="https://www.douban.com", timeout=5).get_res("https://www.douban.com/")
+            res = RequestUtils(timeout=5).get_res("https://www.douban.com/")
             if res:
                 self.cookie = StringUtils.str_from_cookiejar(res.cookies)
         except Exception as err:
@@ -45,7 +45,7 @@ class DouBan:
         log.info("【Douban】正在通过API查询豆瓣详情：%s" % doubanid)
         # 随机休眠
         if wait:
-            time = round(random.uniform(10, 60), 1)
+            time = round(random.uniform(1, 5), 1)
             log.info("【Douban】随机休眠：%s 秒" % time)
             sleep(time)
         if mtype == MediaType.MOVIE:
@@ -377,18 +377,22 @@ class DouBan:
             return []
         return self.__dict_items(infos.get("subject_collection_items"))
 
-    def get_douban_disover(self, mtype, sort, tags, page=1):
+    def get_douban_disover(self, mtype, sort, tags, region, period, page=1):
         if not self.doubanapi:
             return []
         if mtype == MediaType.MOVIE:
             infos = self.doubanapi.movie_recommend(start=(page - 1) * self._movie_num,
                                                    count=self._movie_num,
                                                    sort=sort,
+                                                   region=region,
+                                                   period=period,
                                                    tags=tags)
         else:
             infos = self.doubanapi.tv_recommend(start=(page - 1) * self._tv_num,
                                                 count=self._tv_num,
                                                 sort=sort,
+                                                region=region,
+                                                period=period,
                                                 tags=tags)
         if not infos:
             return []
@@ -396,7 +400,6 @@ class DouBan:
 
     @staticmethod
     def __dict_items(infos, media_type=None, poster_filter=False):
-        
         """
         转化为字典
         """
