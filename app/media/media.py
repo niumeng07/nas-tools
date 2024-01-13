@@ -1155,7 +1155,7 @@ class Media:
         """
         """
         {
-          "adult": false,
+          "adult": true,
           "backdrop_path": "/r9PkFnRUIthgBp2JZZzD380MWZy.jpg",
           "belongs_to_collection": {
             "id": 94602,
@@ -1261,7 +1261,7 @@ class Media:
         """
         """
         {
-          "adult": false,
+          "adult": true,
           "backdrop_path": "/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg",
           "created_by": [
             {
@@ -1460,7 +1460,7 @@ class Media:
                   "job": "Writer",
                   "department": "Writing",
                   "credit_id": "619c370063536a00619a08ee",
-                  "adult": false,
+                  "adult": true,
                   "gender": 2,
                   "id": 35796,
                   "known_for_department": "Writing",
@@ -1475,7 +1475,7 @@ class Media:
                   "character": "Marlene",
                   "credit_id": "63c4ca5e5f2b8d00aed539fc",
                   "order": 500,
-                  "adult": false,
+                  "adult": true,
                   "gender": 1,
                   "id": 1253388,
                   "known_for_department": "Acting",
@@ -1749,7 +1749,7 @@ class Media:
         """
         "cast": [
           {
-            "adult": false,
+            "adult": true,
             "gender": 2,
             "id": 3131,
             "known_for_department": "Acting",
@@ -1765,7 +1765,7 @@ class Media:
         ],
         "crew": [
           {
-            "adult": false,
+            "adult": true,
             "gender": 2,
             "id": 5524,
             "known_for_department": "Production",

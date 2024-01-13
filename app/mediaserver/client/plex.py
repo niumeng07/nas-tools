@@ -391,7 +391,8 @@ class Plex(_IMediaClient):
 
         def get_recently_items(type):
             if type == 1:  # 电影
-                items = self._plex.library.fetchItems('/library/recentlyAdded')
+                # items = self._plex.library.fetchItems('/library/recentlyAdded')
+                items = self._plex.library.section("电影").recentlyAdded()
             else:
                 items = self._plex.fetchItems(f"/hubs/home/recentlyAdded?type={type}&sectionID={library_key}", # 对于电影1,3 对于电视2,8
                                               container_size=total_size,

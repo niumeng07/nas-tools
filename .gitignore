@@ -7,4 +7,6 @@
 /web/backend/user.py
 /build/**
 /venv/**
-/cloudflarespeedtest/**
+/cloudflarespeedtest/*
+nohup.out
+*
