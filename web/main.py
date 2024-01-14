@@ -312,13 +312,7 @@ def index():
                            LibrarySyncConf=LibrarySyncConf,
                            LibraryManageConf=LibraryManageConf,
                            Resumes=Resumes,
-                           # '动漫', '电视剧', '纪录片', '综艺', '音乐', '电影'])
-                           NEWESTADDMOVIE=Latests['电影'],
-                           NEWESTADDSHOW=Latests['电视剧'],
-                           NEWESTADDARTIST=Latests['音乐'],
-                           NEWSSTADDCARTOON=Latests['动漫'],
-                           NEWSSTADDDOCUMENTARY=Latests['纪录片'],
-                           NEWSSTADDVARIETY=Latests['综艺']
+                           Latests=Latests
                            )
 
 

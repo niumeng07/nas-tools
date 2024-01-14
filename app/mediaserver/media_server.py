@@ -378,7 +378,7 @@ class MediaServer:
                                                   channel=channel.value,
                                                   image_url=image_url)
 
-    def get_resume(self, num=12):
+    def get_resume(self, num=15):
         """
         获取继续观看
         """
@@ -395,7 +395,7 @@ class MediaServer:
         return self.server.get_latest(num=num)
 
 
-    def get_category_latest(self, num=20):
+    def get_category_latest(self, num=16):
         """
         获取最近添加
         """

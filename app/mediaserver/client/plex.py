@@ -552,7 +552,7 @@ class Plex(_IMediaClient):
 
         return eventItem
 
-    def get_resume(self, num=12):
+    def get_resume(self, num=15):
         """
         获取继续观看的媒体
         """
@@ -560,7 +560,7 @@ class Plex(_IMediaClient):
             return []
         items = self._plex.fetchItems('/hubs/continueWatching/items', container_start=0, container_size=num)
         ret_resume = []
-        for item in items:
+        for item in items[0:num]:
             item_type = MediaType.MOVIE.value if item.TYPE == "movie" else MediaType.TV.value
             if item_type == MediaType.MOVIE.value:
                 name = item.title
@@ -604,7 +604,7 @@ class Plex(_IMediaClient):
             })
         return ret_resume
 
-    def get_category_latest(self, num=20):
+    def get_category_latest(self, num=16):
         libraries = self._plex.library.sections()
     
         category_latest = {}
@@ -613,7 +613,7 @@ class Plex(_IMediaClient):
             category_key = library.title
             category_latest[category_key] = []
             items = library.recentlyAdded()
-            for item in items:
+            for item in items[0:num]:
                 # print(type(item))
                 item_type = MediaType.TV.value
                 if item.TYPE == "movie":
