@@ -355,10 +355,10 @@ class Plex(_IMediaClient):
             match library.type:
                 case "movie":
                     library_type = MediaType.MOVIE.value
-                    image_list_str = self.get_libraries_image(library.key, 1)
+                    image_list_str = self.get_libraries_image(1, library.title)
                 case "show":
                     library_type = MediaType.TV.value
-                    image_list_str = self.get_libraries_image(library.key, 2)
+                    image_list_str = self.get_libraries_image(2, library.title)
                 case _:
                     continue
             libraries.append({
@@ -374,12 +374,7 @@ class Plex(_IMediaClient):
 
 
     @lru_cache(maxsize=10)
-    def get_libraries_image(self, library_key, type):
-        """
-        获取媒体服务器最近添加的媒体的图片列表
-        param: library_key
-        param: type type的含义: 1 电影 2 剧集 详见 plexapi/utils.py中SEARCHTYPES的定义
-        """
+    def get_libraries_image(self, type, library_title):
         if not self._plex:
             return ""
         # 返回结果
@@ -389,19 +384,9 @@ class Plex(_IMediaClient):
         # 需要的总条数/每页的条数
         total_size = 4
 
-        def get_recently_items(type):
-            if type == 1:  # 电影
-                # items = self._plex.library.fetchItems('/library/recentlyAdded')
-                items = self._plex.library.section("电影").recentlyAdded()
-            else:
-                items = self._plex.fetchItems(f"/hubs/home/recentlyAdded?type={type}&sectionID={library_key}", # 对于电影1,3 对于电视2,8
-                                              container_size=total_size,
-                                              container_start=container_start)
-            return items
-
         # 如果总数不足,接续获取下一页
         while len(poster_urls) < total_size:
-            items = get_recently_items(type)   # 电影接口有问题,不区分类别
+            items = self._plex.library.section(library_title).recentlyAdded()
             for item in items:
                 if item.type == 'episode':
                     # 如果是剧集的单集,则去找上级的图片
