@@ -393,3 +393,12 @@ class MediaServer:
         if not self.server:
             return []
         return self.server.get_latest(num=num)
+
+
+    def get_category_latest(self, num=20):
+        """
+        获取最近添加
+        """
+        if not self.server:
+            return {}
+        return self.server.get_category_latest(num=num)

@@ -269,17 +269,31 @@ def index():
     # 媒体库
     Librarys = MediaServer().get_libraries()
     LibrarySyncConf = SystemConfig().get(SystemConfigKey.SyncLibrary) or []
-    AllLibraryModule = [MyMediaLibraryType.MINE, MyMediaLibraryType.WATCHING, MyMediaLibraryType.NEWESTADD]
+    AllLibraryModule = [MyMediaLibraryType.MINE,
+                        MyMediaLibraryType.WATCHING,
+                        MyMediaLibraryType.NEWESTADDMOVIE,
+                        MyMediaLibraryType.NEWESTADDSHOW,
+                        MyMediaLibraryType.NEWESTADDARTIST,
+                        MyMediaLibraryType.NEWSSTADDCARTOON,
+                        MyMediaLibraryType.NEWSSTADDDOCUMENTARY,
+                        MyMediaLibraryType.NEWSSTADDVARIETY]
+
     LibraryManageConf = SystemConfig().get(SystemConfigKey.LibraryDisplayModule) or []
+    # log.error(f"LibraryManageConf111: {LibraryManageConf}")
     if not LibraryManageConf:
         for index, item in enumerate(AllLibraryModule):
+            # log.error(f"append index: {index}, item: {item}")
             LibraryManageConf.append({"id": index, "name": item.value, "selected": True})
+
+    # log.error(f"LibraryManageConf DEBUG???: {LibraryManageConf}")
 
     # 继续观看
     Resumes = MediaServer().get_resume()
 
     # 最近添加
-    Latests = MediaServer().get_latest()
+    Latests= MediaServer().get_category_latest()
+    # log.error('===========================================')
+    # log.error(f"{Latests.keys()}")
 
     return render_template("index.html",
                            ServerSucess=ServerSucess,
@@ -298,7 +312,13 @@ def index():
                            LibrarySyncConf=LibrarySyncConf,
                            LibraryManageConf=LibraryManageConf,
                            Resumes=Resumes,
-                           Latests=Latests
+                           # '动漫', '电视剧', '纪录片', '综艺', '音乐', '电影'])
+                           NEWESTADDMOVIE=Latests['电影'],
+                           NEWESTADDSHOW=Latests['电视剧'],
+                           NEWESTADDARTIST=Latests['音乐'],
+                           NEWSSTADDCARTOON=Latests['动漫'],
+                           NEWSSTADDDOCUMENTARY=Latests['纪录片'],
+                           NEWSSTADDVARIETY=Latests['综艺']
                            )
 
 

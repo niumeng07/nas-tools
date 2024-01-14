@@ -3,13 +3,19 @@ from enum import Enum
 class MyMediaLibraryType(Enum):
     MINE = '我的媒体库'
     WATCHING = '正在观看'
-    NEWESTADD = '最新入库'
+    NEWESTADDMOVIE = '最新入库电影'
+    NEWESTADDSHOW = '最新入库电视剧'
+    NEWESTADDARTIST = '最新入库音乐'
+    NEWSSTADDCARTOON = '最新入库动漫'
+    NEWSSTADDDOCUMENTARY = '最新入库纪录片'
+    NEWSSTADDVARIETY = '最新入库综艺'
 
 class MediaType(Enum):
     TV = '电视剧'
     MOVIE = '电影'
     ANIME = '动漫'
     UNKNOWN = '未知'
+    ARTIST = '音乐'
 
 
 class DownloaderType(Enum):

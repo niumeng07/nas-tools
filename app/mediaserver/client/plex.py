@@ -355,10 +355,13 @@ class Plex(_IMediaClient):
             match library.type:
                 case "movie":
                     library_type = MediaType.MOVIE.value
-                    image_list_str = self.get_libraries_image(1, library.title)
+                    image_list_str = self.get_libraries_image(library.title)
                 case "show":
                     library_type = MediaType.TV.value
-                    image_list_str = self.get_libraries_image(2, library.title)
+                    image_list_str = self.get_libraries_image(library.title)
+                case "artist":  # 音乐
+                    library_type = MediaType.ARTIST.value
+                    image_list_str = self.get_libraries_image(library.title)
                 case _:
                     continue
             libraries.append({
@@ -374,7 +377,7 @@ class Plex(_IMediaClient):
 
 
     @lru_cache(maxsize=10)
-    def get_libraries_image(self, type, library_title):
+    def get_libraries_image(self, library_title):
         if not self._plex:
             return ""
         # 返回结果
@@ -600,3 +603,32 @@ class Plex(_IMediaClient):
                 "link": link
             })
         return ret_resume
+
+    def get_category_latest(self, num=20):
+        libraries = self._plex.library.sections()
+    
+        category_latest = {}
+    
+        for library in libraries:
+            category_key = library.title
+            category_latest[category_key] = []
+            items = library.recentlyAdded()
+            for item in items:
+                # print(type(item))
+                item_type = MediaType.TV.value
+                if item.TYPE == "movie":
+                    item_type = MediaType.MOVIE.value
+                elif item.TYPE == "artist":
+                    item_type = MediaType.ARTIST.value
+                link = self.get_play_url(item.key)
+                title = item.title
+                image = self.get_nt_image_url(item.posterUrl)
+                category_latest[category_key].append({
+                    "id": item.key,
+                    "name": title,
+                    "type": item_type,
+                    "image": image,
+                    "link": link
+                })
+    
+        return category_latest
