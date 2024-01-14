@@ -138,14 +138,14 @@
 {% endif %}
 
 {% for item in LibraryManageConf %}
-{% if NEWESTADDSHOW %}
-{% if item['name'] == '最新入库电视剧' and item['selected'] %}
+{% if item['name'] != '正在观看' and item['name'] != '我的媒体库' %}
+{% if Latests %}
 <div class="container-xl">
   <div class="page-header d-print-none">
     <div class="row align-items-center">
       <div class="col">
         <h2 class="page-title">
-          最新入库电视剧
+          <div>最新入库{{item['name']}}</div>
         </h2>
       </div>
     </div>
@@ -154,7 +154,7 @@
 <div class="page-body">
   <div class="container-xl">
     <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWESTADDSHOW %}
+      {% for Latest in Latests[item['name']] %}
       {% set theLibLink = Latest.link %}
         {% if "127.0.0.1" in theLibLink[0:16] %}
           {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
@@ -178,206 +178,7 @@
 </div>
 {% endif %}
 {% endif %}
-{% if NEWESTADDMOVIE %}
-{% if item['name'] == '最新入库电影' and item['selected'] %}
-<div class="container-xl">
-  <div class="page-header d-print-none">
-    <div class="row align-items-center">
-      <div class="col">
-        <h2 class="page-title">
-          最新入库电影
-        </h2>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="page-body">
-  <div class="container-xl">
-    <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWESTADDMOVIE %}
-      {% set theLibLink = Latest.link %}
-        {% if "127.0.0.1" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
-        {% elif "localhost" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
-        {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
-        <custom-img img-class="w-100"
-                    img-src="{{ Latest.image }}"
-                    img-ratio="150%"
-                    img-style="object-fit: cover;"
-        ></custom-img>
-        <span class="badge badge-pill {% if Latest.type == '电影' %}bg-green{% else %}bg-blue{% endif %}" style="position: absolute; top: 10px; left: 10px">
-          {{ Latest.type }}
-        </span>
-        <div class="m-2 text-center" style="-webkit-line-clamp:1; display: -webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow: ellipsis;">{{ Latest.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
-{% endif %}
-{% if NEWSSTADDCARTOON %}
-{% if item['name'] == '最新入库动漫' and item['selected'] %}
-<div class="container-xl">
-  <div class="page-header d-print-none">
-    <div class="row align-items-center">
-      <div class="col">
-        <h2 class="page-title">
-          最新入库动漫
-        </h2>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="page-body">
-  <div class="container-xl">
-    <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWSSTADDCARTOON %}
-      {% set theLibLink = Latest.link %}
-        {% if "127.0.0.1" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
-        {% elif "localhost" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
-        {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
-        <custom-img img-class="w-100"
-                    img-src="{{ Latest.image }}"
-                    img-ratio="150%"
-                    img-style="object-fit: cover;"
-        ></custom-img>
-        <span class="badge badge-pill {% if Latest.type == '电影' %}bg-green{% else %}bg-blue{% endif %}" style="position: absolute; top: 10px; left: 10px">
-          {{ Latest.type }}
-        </span>
-        <div class="m-2 text-center" style="-webkit-line-clamp:1; display: -webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow: ellipsis;">{{ Latest.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
-{% endif %}
-{% if NEWSSTADDDOCUMENTARY %}
-{% if item['name'] == '最新入库纪录片' and item['selected'] %}
-<div class="container-xl">
-  <div class="page-header d-print-none">
-    <div class="row align-items-center">
-      <div class="col">
-        <h2 class="page-title">
-          最新入库纪录片
-        </h2>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="page-body">
-  <div class="container-xl">
-    <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWSSTADDDOCUMENTARY %}
-      {% set theLibLink = Latest.link %}
-        {% if "127.0.0.1" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
-        {% elif "localhost" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
-        {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
-        <custom-img img-class="w-100"
-                    img-src="{{ Latest.image }}"
-                    img-ratio="150%"
-                    img-style="object-fit: cover;"
-        ></custom-img>
-        <span class="badge badge-pill {% if Latest.type == '电影' %}bg-green{% else %}bg-blue{% endif %}" style="position: absolute; top: 10px; left: 10px">
-          {{ Latest.type }}
-        </span>
-        <div class="m-2 text-center" style="-webkit-line-clamp:1; display: -webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow: ellipsis;">{{ Latest.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
-{% endif %}
-{% if NEWSSTADDVARIETY %}
-{% if item['name'] == '最新入库综艺' and item['selected'] %}
-<div class="container-xl">
-  <div class="page-header d-print-none">
-    <div class="row align-items-center">
-      <div class="col">
-        <h2 class="page-title">
-          最新入库综艺
-        </h2>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="page-body">
-  <div class="container-xl">
-    <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWSSTADDVARIETY %}
-      {% set theLibLink = Latest.link %}
-        {% if "127.0.0.1" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
-        {% elif "localhost" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
-        {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
-        <custom-img img-class="w-100"
-                    img-src="{{ Latest.image }}"
-                    img-ratio="150%"
-                    img-style="object-fit: cover;"
-        ></custom-img>
-        <span class="badge badge-pill {% if Latest.type == '电影' %}bg-green{% else %}bg-blue{% endif %}" style="position: absolute; top: 10px; left: 10px">
-          {{ Latest.type }}
-        </span>
-        <div class="m-2 text-center" style="-webkit-line-clamp:1; display: -webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow: ellipsis;">{{ Latest.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
-{% endif %}
-{% if NEWESTADDARTIST %}
-{% if item['name'] == '最新入库音乐' and item['selected'] %}
-<div class="container-xl">
-  <div class="page-header d-print-none">
-    <div class="row align-items-center">
-      <div class="col">
-        <h2 class="page-title">
-          最新入库音乐
-        </h2>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="page-body">
-  <div class="container-xl">
-    <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in NEWESTADDARTIST%}
-      {% set theLibLink = Latest.link %}
-        {% if "127.0.0.1" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
-        {% elif "localhost" in theLibLink[0:16] %}
-          {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
-        {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
-        <custom-img img-class="w-100"
-                    img-src="{{ Latest.image }}"
-                    img-ratio="150%"
-                    img-style="object-fit: cover;"
-        ></custom-img>
-        <span class="badge badge-pill {% if Latest.type == '电影' %}bg-green{% else %}bg-blue{% endif %}" style="position: absolute; top: 10px; left: 10px">
-          {{ Latest.type }}
-        </span>
-        <div class="m-2 text-center" style="-webkit-line-clamp:1; display: -webkit-box; -webkit-box-orient:vertical; overflow:hidden; text-overflow: ellipsis;">{{ Latest.name }}</div>
-      </a>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-{% endif %}
-{% endif %}
+
 {% endfor %}
 
 
