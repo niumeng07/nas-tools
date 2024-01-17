@@ -104,6 +104,11 @@
     </div>
   </div>
   <div id="main_bottom_menubar" class="position-fixed w-100 d-flex justify-content-between d-sm-none main-bottom-menubar d-none">
+    {% if "仪表盘" in CurrentUser.pris %}
+    <a class="card-btn border-0 px-0 text-center" href="javascript:navmenu('dashboard')">
+      {{ SVG.dashboard() }}
+    </a>
+    {% endif %}
     {% if "我的媒体库" in CurrentUser.pris %}
     <a class="card-btn border-0 px-0 text-center" href="javascript:navmenu('index')">
       {{ SVG.home() }}

@@ -159,7 +159,7 @@ class StringUtils:
         if not text:
             return int_val
         try:
-            int_val = int(text.strip().replace(',', ''))
+            int_val = int(float(text.strip().replace(',', '')))
         except Exception as e:
             ExceptionUtils.exception_traceback(e)
 

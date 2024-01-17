@@ -316,6 +316,36 @@ def index():
                            )
 
 
+# @App.route('/dashboard', methods=['POST', 'GET'])
+# @login_required
+# def dashboard():
+#     # 媒体服务器类型
+#     MSType = Config().get_config('media').get('media_server')
+#     # 获取媒体数量
+#     MediaCounts = WebAction().get_library_mediacount()
+#     if MediaCounts.get("code") == 0:
+#         ServerSucess = True
+#     else:
+#         ServerSucess = False
+# 
+#     # 磁盘空间
+#     LibrarySpaces = WebAction().get_library_spacesize()
+# 
+# 
+#     return render_template("dashboard.html",
+#                            ServerSucess=ServerSucess,
+#                            MediaCount={'MovieCount': MediaCounts.get("Movie"),
+#                                        'SeriesCount': MediaCounts.get("Series"),
+#                                        'SongCount': MediaCounts.get("Music"),
+#                                        "EpisodeCount": MediaCounts.get("Episodes")},
+#                            UserCount=MediaCounts.get("User"),
+#                            FreeSpace=LibrarySpaces.get("FreeSpace"),
+#                            TotalSpace=LibrarySpaces.get("TotalSpace"),
+#                            UsedSapce=LibrarySpaces.get("UsedSapce"),
+#                            UsedPercent=LibrarySpaces.get("UsedPercent"),
+#                            MediaServerType=MSType
+#                            )
+
 # 资源搜索页面
 @App.route('/search', methods=['POST', 'GET'])
 @login_required
