@@ -22,13 +22,11 @@
           <a href="javascript:show_mediasync_modal()" class="btn btn-primary d-sm-none btn-icon">
             {{ SVG.refresh() }}
           </a>
-          <button class="btn btn-cyan d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-index-statistics">
-            {{ SVG.pie() }}
-            统计数据
-          </button>
+          <!--无文字小图标
           <button class="btn btn-cyan d-sm-none btn-icon" data-bs-toggle="modal" data-bs-target="#modal-index-statistics">
             {{ SVG.pie() }}
           </button>
+          -->
           <button class="btn d-none d-sm-inline-block" data-bs-toggle="modal" data-bs-target="#modal-index-playhistory">
             {{ SVG.history() }}
             播放记录
@@ -64,7 +62,7 @@
           {% elif "localhost" in theLibLink[0:16] %}
             {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
           {% endif %}
-          <a class="card card-link-pop rounded-3 overflow-hidden library-{{ Library.id }}" href="{{ theLibLink }}" target="_blank">
+          <a class="card border-0 card-link-pop rounded-3 overflow-hidden library-{{ Library.id }}" href="{{ theLibLink }}" target="_blank">
           {% if Library.image %}
             <custom-img img-class="w-100"
                         img-src="{{ Library.image }}"
@@ -110,7 +108,7 @@
         {% elif "localhost" in theLibLink[0:16] %}
           {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
         {% endif %}
-      <a class="card card-link-pop rounded-3 overflow-hidden resume-{{ Resume.id }}" href="{{ theLibLink }}" target="_blank">
+      <a class="card border-0 card-link-pop rounded-3 overflow-hidden resume-{{ Resume.id }}" href="{{ theLibLink }}" target="_blank">
         <custom-img img-class="w-100"
                     img-src="{{ Resume.image }}"
                     img-ratio="50%"
@@ -161,7 +159,7 @@
         {% elif "localhost" in theLibLink[0:16] %}
           {% set theLibLink = theLibLink|replace("localhost",curdomainleft,1) %}
         {% endif %}
-      <a class="card card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
+      <a class="card border-0 card-link-pop overflow-hidden rounded-3 latest-{{ Latest.id }}" href="{{ theLibLink }}" target="_blank">
         <custom-img img-class="w-100"
                     img-src="{{ Latest.image }}"
                     img-ratio="150%"
@@ -190,7 +188,7 @@
   <div class="modal-dialog modal-md modal-dialog-centered" role="document">
     <div class="modal-content">
       <div class="card border-0">
-        <div class="card-body text-center">
+        <div class="card-body text-center border-0">
           <div class="mb-3">
             <span class="avatar avatar-xl avatar-rounded"
                   style="background-image: url('../static/img/mediaserver/{{ MediaServerType }}.png')"></span>
@@ -270,7 +268,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="card-body card-body-scrollable card-body-scrollable-shadow p-0 overflow-hidden">
+        <div class="card-body border-0 card-body-scrollable card-body-scrollable-shadow p-0 overflow-hidden">
           <div class="divide-y">
             {% for Activity in Activitys %}
               <div>
@@ -315,8 +313,8 @@
       <div class="modal-body py-0">
         <div class="row">
           <div class="col-lg-3 mt-3">
-            <div class="card">
-              <div class="card-body">
+            <div class="card border-0">
+              <div class="card-body border-0">
                 <div class="d-flex align-items-center">
                   <div class="subheader">存储空间</div>
                 </div>
@@ -335,8 +333,8 @@
             </div>
           </div>
           <div class="col-lg-3 mt-3">
-            <div class="card">
-              <div class="card-body">
+            <div class="card border-0">
+              <div class="card-body border-0">
                 <div class="d-flex align-items-center">
                   <div class="subheader">电影</div>
                 </div>
@@ -350,8 +348,8 @@
             </div>
           </div>
           <div class="col-lg-3 mt-3">
-            <div class="card">
-              <div class="card-body">
+            <div class="card border-0">
+              <div class="card-body border-0">
                 <div class="d-flex align-items-center">
                   <div class="subheader">电视剧/动漫</div>
                 </div>
@@ -370,8 +368,8 @@
             </div>
           </div>
           <div class="col-lg-3 mt-3">
-            <div class="card">
-              <div class="card-body">
+            <div class="card border-0">
+              <div class="card-body border-0">
                 <div class="d-flex align-items-center">
                   <div class="subheader">音乐</div>
                 </div>
@@ -477,113 +475,6 @@
       }
     }
   }
-
-</script>
-<script type="text/javascript">
-
-  var chart_statistics = undefined;
-
-  // 加载图表
-  $('#modal-index-statistics').off('shown.bs.modal').on('shown.bs.modal', function (e) {
-    // 请求数据
-    ajax_post("get_transfer_statistics", {}, function(ret){
-
-      // 电影变化图
-      if (typeof (chart_statistics) != 'undefined')
-        chart_statistics.dispose();
-
-      chart_statistics = echarts.init(document.getElementById("index_statistics_chart"), null, {
-        renderer: 'canvas',
-        useDirtyRect: false
-      });
-
-      const option = {
-        title: {
-          text: ''
-        },
-        tooltip: {
-          trigger: 'axis',
-          axisPointer: {
-            type: 'cross',
-            label: {
-              backgroundColor: '#6a7985'
-            }
-          }
-        },
-        legend: {
-          data: ['电影', '电视剧', '动漫'],
-          textStyle: {
-            color: '#206bc4'
-          }
-        },
-        toolbox: {
-          feature: {
-
-          }
-        },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-        xAxis: [
-          {
-            type: 'category',
-            boundaryGap: false,
-            data: ret.Labels
-          }
-        ],
-        yAxis: [
-          {
-            type: 'value'
-          }
-        ],
-        series: [
-          {
-            name: '电影',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {},
-            emphasis: {
-              focus: 'series'
-            },
-            data: ret.MovieNums
-          },
-          {
-            name: '电视剧',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {},
-            emphasis: {
-              focus: 'series'
-            },
-            data: ret.TvNums
-          },
-          {
-            name: '动漫',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {},
-            emphasis: {
-              focus: 'series'
-            },
-            data: ret.AnimeNums
-          }
-        ]
-      };
-      chart_statistics.setOption(option);
-    });
-  });
-
-  $(document).ready(function () {
-    // 响应大小调整
-    window.onresize = function () {
-      if(chart_statistics) {
-        chart_statistics.resize();
-      }
-    };
-  });
 
 </script>
 <script type="text/javascript">

@@ -3435,7 +3435,7 @@ class WebAction:
         if not isinstance(anime_paths, list):
             anime_paths = [anime_paths]
         # 总空间、剩余空间
-        TotalSpace, FreeSpace = SystemUtils.calculate_space_usage(movie_paths + tv_paths + anime_paths)
+        TotalSpace, FreeSpace = SystemUtils.get_space_statics(movie_paths + tv_paths + anime_paths)
         if TotalSpace:
             # 已使用空间
             UsedSapce = TotalSpace - FreeSpace
@@ -3462,6 +3462,38 @@ class WebAction:
                 "FreeSpace": FreeSpace,
                 "UsedSapce": UsedSapce,
                 "TotalSpace": TotalSpace}
+
+    @staticmethod
+    def get_memory_statics():
+        TotalMemory, AvailableMemory, UsedPercent = SystemUtils.get_memory_statics()
+
+        if TotalMemory:
+            # 已使用空间
+            UsedMemory = TotalMemory - AvailableMemory
+            # 百分比格式化
+            UsedPercent = "%0.1f" % ((UsedMemory / TotalMemory) * 100)
+            # 总剩余空间 格式化
+            if AvailableMemory > 1024:
+                AvailableMemory = "{:,} TB".format(round(AvailableMemory / 1024, 2))
+            else:
+                AvailableMemory = "{:,} GB".format(round(AvailableMemory, 2))
+            # 总使用空间 格式化
+            if UsedMemory > 1024:
+                UsedMemory = "{:,} TB".format(round(UsedMemory / 1024, 2))
+            else:
+                UsedMemory = "{:,} GB".format(round(UsedMemory, 2))
+            # 总空间 格式化
+            if TotalMemory > 1024:
+                TotalMemory = "{:,} TB".format(round(TotalMemory / 1024, 2))
+            else:
+                TotalMemory = "{:,} GB".format(round(TotalMemory, 2))
+
+        return {
+            "code": 0,
+            "UsedPercent": UsedPercent,
+            "AvaiableMemory": AvailableMemory,
+            "TotalMemory": TotalMemory
+        }
 
     @staticmethod
     def get_transfer_statistics():

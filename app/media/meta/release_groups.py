@@ -55,6 +55,8 @@ class ReleaseGroupsMatcher(object):
         "piggo": ['PiGo(?:NF|(?:H|WE)B)'],
         "ptchina": [],
         "pterclub": ['PTer(?:|DIY|Game|(?:M|T)V|WEB)'],
+        "ying": ['Ying(?:|DIY|Game|(?:M|T)V|WEB)'],
+        "zmpt": ['Zm(?:|DIY|Game|(?:M|T)V|WEB|PT)'],
         "pthome": ['PTH(?:|Audio|eBook|music|ome|tv|WEB)'],
         "ptmsg": [],
         "ptsbao": ['PTsbao', 'OPS', 'F(?:Fans(?:AIeNcE|BD|D(?:VD|IY)|TV|WEB)|HDMv)', 'SGXT'],

@@ -6,6 +6,7 @@ import log
 from app.media import Media
 from app.utils import RequestUtils, ExceptionUtils
 from config import Config
+import glob
 
 
 def get_login_wallpaper(time_now=None):
@@ -28,6 +29,25 @@ def get_login_wallpaper(time_now=None):
     if img_enc:
         return img_enc, img_title, img_link
     return "", "", ""
+
+
+def get_wallpaper(input_wallpaper_dir=None, time_now=None):
+    if input_wallpaper_dir:
+        input_wallpaper_file_names = glob.glob(input_wallpaper_dir + "*/*")
+        if len(input_wallpaper_file_names) > 0:
+            hour = datetime.datetime.now().hour % len(input_wallpaper_file_names)
+            input_wallpaper_file_name = input_wallpaper_file_names[hour]
+            ext = input_wallpaper_file_name.split(".")[-1]
+
+            with open(input_wallpaper_file_name, "rb") as f:
+                img = f.read()
+
+            img_enc = base64.b64encode(img).decode()
+
+            return img_enc, "", ""
+        else:
+            return get_login_wallpaper()
+    return get_login_wallpaper()
 
 
 @lru_cache(maxsize=1)

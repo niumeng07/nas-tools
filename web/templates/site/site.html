@@ -36,7 +36,7 @@
   <div class="container-xl">
     <div class="d-grid gap-3 grid-info-card">
       {% for Site in Sites %}
-      <div class="card card-link-pop">
+      <div class="card border-0 card-link-pop">
         <div class="card-header">
           <h3 class="card-title">
             <span class="badge badge-pill bg-teal"><small>{{ Site.pri }}</small></span>
@@ -59,7 +59,7 @@
             </a>
           </div>
         </div>
-        <div class="card-body">
+        <div class="card-body border-0">
           <dl class="row">
             {% if Site.signurl %}
             <dt class="col-3">站点地址:</dt>

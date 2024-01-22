@@ -34,7 +34,7 @@
   <div class="container-xl">
     <div class="row row-cards">
       {% for Id, Attr in DownloadSetting.items() %}
-      <div class="card">
+      <div class="card border-0">
         <div class="card-header">
           <a href="javascript:void(0)" onclick="show_download_setting_detail('{{ Attr.id }}')" title="展开/折叠"
              style="text-decoration-line: none; color: unset" data-bs-toggle="tooltip">
@@ -88,7 +88,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="card-body" id="detail_{{ Attr.id }}"
+        <div class="card-body border-0" id="detail_{{ Attr.id }}"
             style="display: {% if Count > 3 %}none{% else %}block{% endif %};">
           <div class="datagrid">
             <div class="datagrid-item">

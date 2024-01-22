@@ -44,7 +44,7 @@
     <div class="container-xl">
         <div class="row row-cards">
             {% for Task in Tasks %}
-            <div class="card">
+            <div class="card border-0">
                 <div class="card-header">
                     <div>
                         <input class="form-check-input m-0 align-middle" name="burshtask" value="{{ Task.id }}"
@@ -114,7 +114,7 @@
                         </a>
                     </div>
                 </div>
-                <div class="card-body" id="detail_{{ Task.id }}"
+                <div class="card-body border-0" id="detail_{{ Task.id }}"
                      style="display: {% if Count > 2 %}none{% else %}block{% endif %};">
                     <div class="datagrid">
                         <div class="datagrid-item">

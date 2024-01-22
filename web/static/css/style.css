@@ -8,11 +8,54 @@ body, .page {
 }
 
 .theme-light .page {
-    background-image: linear-gradient(180deg, rgba(123, 178, 233, 0.4) 0%, rgba(231, 235, 239, 1) calc(50vh));
+    background-image: url(https://api.dujin.org/bing/1920.php);
+    background-image: url(https://api.dujin.org/pic/);
+    background-position: center;
+    background-size: cover;
 }
 
+.theme-light .navbar, .theme-light .alert:not(.alert-important), .theme-light .card, .theme-light .card-footer, .theme-light .card-stacked::after, .theme-light .footer:not(.footer-transparent), .theme-light .modal-content, .theme-light .modal-header, .theme-light .toast, .theme-light .toast-header {
+    background-color: rgba(231, 235, 239, 0.7)!important;
+}
+
+.theme-light .dropdown-menu {
+    background-color: rgba(231, 235, 239, 0.9)!important;
+}
+
+.theme-light.form-check-input:not(:checked), .theme-light .form-control, .theme-light .form-file-text, .theme-light .form-select, .theme-light .form-selectgroup-check {
+    background-color: rgba(231, 235, 239, 0.2);
+    border: 0 !important;
+}
+
+.theme-light .page #page_content {
+    flex: 1 1 0;
+    overflow-y: auto;
+}
+
+
 .theme-dark .page {
-    background-image: linear-gradient(180deg, var(--tblr-body-bg) 0%, var(--tblr-bg-surface) calc(50vh));
+    background-image: url(https://api.dujin.org/bing/1920.php);
+    background-image: url(https://api.dujin.org/pic/);
+    background-position: center;
+    background-size: cover;
+}
+
+.theme-dark .navbar, .theme-dark .alert:not(.alert-important), .theme-dark .card, .theme-dark .card-footer, .theme-dark .card-stacked::after, .theme-dark .footer:not(.footer-transparent), .theme-dark .modal-content, .theme-dark .modal-header, .theme-dark .toast, .theme-dark .toast-header {
+    background-color: rgba(29, 39, 59, 0.7)!important;
+}
+
+.theme-dark .dropdown-menu {
+    background-color: rgba(29, 39, 59, 0.9)!important;
+}
+
+.theme-dark .form-check-input:not(:checked), .theme-dark .form-control, .theme-dark .form-file-text, .theme-dark .form-select, .theme-dark .form-selectgroup-check {
+    background-color: rgba(29, 39, 59, 0.2);
+    border: 0 !important;
+}
+
+.theme-dark .page #page_content {
+    flex: 1 1 0;
+    overflow-y: auto;
 }
 
 .tooltip-inner {
@@ -636,7 +679,8 @@ LI.directory a.selected {
 }
 
 .theme-dark .lit-navbar-logo {
-    filter: invert(1) grayscale(100%) brightness(200%);
+    height: 3rem;
+    width: auto;
 }
 
 .lit-navbar-accordion-item, .lit-navbar-accordion-item-active {

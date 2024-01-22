@@ -41,7 +41,7 @@
     <div class="container-xl">
       <div class="d-grid gap-3 grid-normal-card align-items-start">
         {% for Id, Attr in Items.items() %}
-          <a class="card card-link-pop p-0 overflow-hidden rounded-3"
+          <a class="card border-0 card-link-pop p-0 overflow-hidden rounded-3"
              href='javascript:{% if Attr.tmdbid %}show_mediainfo_modal("TV", "{{ Attr.name }}", "{{ Attr.year }}", "{{ Attr.tmdbid }}", "tv_rss", "{{ Attr.id }}"){% else %}show_edit_rss_media_modal("{{ Attr.id }}", "TV"){% endif %}'>
             <div class="text-center" style="overflow:hidden">
               <custom-img img-class="w-100"
@@ -58,7 +58,7 @@
                    aria-valuemin="0" aria-valuemax="100">
               </div>
             </div>
-            <div class="card-body text-center">
+            <div class="card-body text-center border-0">
               <div class="card-title mb-1 text-truncate">
                 {% if Attr.year %}
                   {{ Attr.name }} ({{ Attr.year }}) {% if Attr.season != "S00" %}{{ Attr.season }}{% endif %}

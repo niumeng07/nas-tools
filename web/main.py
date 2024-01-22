@@ -48,7 +48,7 @@ from web.action import WebAction
 from web.apiv1 import apiv1_bp
 from web.backend.WXBizMsgCrypt3 import WXBizMsgCrypt
 from web.backend.pro_user import ProUser
-from web.backend.wallpaper import get_login_wallpaper
+from web.backend.wallpaper import get_login_wallpaper, get_wallpaper
 from web.backend.web_utils import WebUtils
 from web.security import require_auth
 
@@ -228,6 +228,8 @@ def web():
     CustomScriptCfg = SystemConfig().get(SystemConfigKey.CustomScript)
     Menus = WebAction().get_user_menus().get("menus") or []
     Commands = WebAction().get_commands()
+
+    image_code, img_title, img_link = get_wallpaper("./web/static/img/background/")
     return render_template('navigation.html',
                            GoPage=GoPage,
                            CurrentUser=current_user,
@@ -244,6 +246,9 @@ def web():
                            CustomScriptCfg=CustomScriptCfg,
                            DefaultPath=DefaultPath,
                            Menus=Menus,
+                           image_code=image_code,
+                           img_title=img_title,
+                           img_link=img_link,
                            Commands=Commands)
 
 
@@ -279,21 +284,16 @@ def index():
                         MyMediaLibraryType.NEWSSTADDVARIETY]
 
     LibraryManageConf = SystemConfig().get(SystemConfigKey.LibraryDisplayModule) or []
-    # log.error(f"LibraryManageConf111: {LibraryManageConf}")
     if not LibraryManageConf:
         for index, item in enumerate(AllLibraryModule):
-            # log.error(f"append index: {index}, item: {item}")
             LibraryManageConf.append({"id": index, "name": item.value, "selected": True})
 
-    # log.error(f"LibraryManageConf DEBUG???: {LibraryManageConf}")
 
     # 继续观看
     Resumes = MediaServer().get_resume()
 
     # 最近添加
     Latests= MediaServer().get_category_latest()
-    # log.error('===========================================')
-    # log.error(f"{Latests.keys()}")
 
     return render_template("index.html",
                            ServerSucess=ServerSucess,
@@ -316,35 +316,52 @@ def index():
                            )
 
 
-# @App.route('/dashboard', methods=['POST', 'GET'])
-# @login_required
-# def dashboard():
-#     # 媒体服务器类型
-#     MSType = Config().get_config('media').get('media_server')
-#     # 获取媒体数量
-#     MediaCounts = WebAction().get_library_mediacount()
-#     if MediaCounts.get("code") == 0:
-#         ServerSucess = True
-#     else:
-#         ServerSucess = False
-# 
-#     # 磁盘空间
-#     LibrarySpaces = WebAction().get_library_spacesize()
-# 
-# 
-#     return render_template("dashboard.html",
-#                            ServerSucess=ServerSucess,
-#                            MediaCount={'MovieCount': MediaCounts.get("Movie"),
-#                                        'SeriesCount': MediaCounts.get("Series"),
-#                                        'SongCount': MediaCounts.get("Music"),
-#                                        "EpisodeCount": MediaCounts.get("Episodes")},
-#                            UserCount=MediaCounts.get("User"),
-#                            FreeSpace=LibrarySpaces.get("FreeSpace"),
-#                            TotalSpace=LibrarySpaces.get("TotalSpace"),
-#                            UsedSapce=LibrarySpaces.get("UsedSapce"),
-#                            UsedPercent=LibrarySpaces.get("UsedPercent"),
-#                            MediaServerType=MSType
-#                            )
+# 仪表盘
+@App.route('/dashboard', methods=['POST', 'GET'])
+@login_required
+def dashboard():
+    # 媒体服务器类型
+    MSType = Config().get_config('media').get('media_server')
+
+    # 磁盘空间
+    LibrarySpaces = WebAction().get_library_spacesize()
+
+    # CPU利用率
+
+    # 内存利用率
+    MemorySpaces = WebAction().get_memory_statics()
+
+    # 媒体统计
+    MediaCounts = WebAction().get_library_mediacount()
+    if MediaCounts.get("code") == 0:
+        ServerSucess = True
+    else:
+        ServerSucess = False
+
+    # 最新入库统计
+
+    # 下载器信息
+    DownloaderInfo = Downloader().downloader_info()
+
+    # 后台任务
+
+    # 消息统计
+
+    # 刮削统计、成功、失败、分类成功、分类失败
+
+
+    return render_template("dashboard.html",
+                           ServerSucess=ServerSucess,
+                           MediaCount={'MovieCount': MediaCounts.get("Movie"),
+                                       'SeriesCount': MediaCounts.get("Series"),
+                                       'SongCount': MediaCounts.get("Music"),
+                                       "EpisodeCount": MediaCounts.get("Episodes")},
+                           UserCount=MediaCounts.get("User"),
+                           SpaceStatics=LibrarySpaces,
+                           MemoryStatics=MemorySpaces,
+                           DownloaderInfo=DownloaderInfo,
+                           MediaServerType=MSType
+                           )
 
 # 资源搜索页面
 @App.route('/search', methods=['POST', 'GET'])
