@@ -35,6 +35,7 @@ class Downloader:
     _download_settings = {}
     _downloader_confs = {}
     _monitor_downloader_ids = []
+    _downloader_ids = []
     # 下载器ID-名称枚举类
     _DownloaderEnum = None
     _scheduler = None
@@ -72,6 +73,7 @@ class Downloader:
         # 下载器配置，生成实例
         self._downloader_confs = {}
         self._monitor_downloader_ids = []
+        self._downloader_ids = []
         for downloader_conf in self.dbhelper.get_downloaders():
             if not downloader_conf:
                 continue
@@ -84,6 +86,7 @@ class Downloader:
             match_path = downloader_conf.MATCH_PATH
             rmt_mode = downloader_conf.RMT_MODE
             rmt_mode_name = ModuleConf.RMT_MODES.get(rmt_mode).value if rmt_mode else ""
+            self._downloader_ids.append(did)
             # 输出日志
             if transfer:
                 log_content = ""
@@ -192,6 +195,28 @@ class Downloader:
         if not self._download_settings.get(default_download_setting_id):
             default_download_setting_id = "-1"
         return default_download_setting_id
+
+
+    def downloader_info(self):
+        downloader_ids = self._downloader_ids
+        DownloaderInfo = {}
+        for downloader_id in downloader_ids:
+            with lock:
+                # 获取下载器配置
+                downloader_conf = self.get_downloader_conf(downloader_id)
+                name = downloader_conf.get("name")
+                only_nastool = downloader_conf.get("only_nastool")
+                match_path = downloader_conf.get("match_path")
+                rmt_mode = ModuleConf.RMT_MODES.get(downloader_conf.get("rmt_mode"))
+                # 获取下载器实例
+                _client = self.__get_client(downloader_id)
+                if not _client:
+                    continue
+                info = _client.downloader_info()
+    
+                DownloaderInfo[name] = info
+        return DownloaderInfo
+
 
     def get_downloader_type(self, downloader_id=None):
         """

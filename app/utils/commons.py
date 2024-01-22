@@ -2,6 +2,7 @@
 import threading
 import time
 from collections import OrderedDict
+from enum import Enum
 
 # 线程锁
 lock = threading.RLock()
@@ -58,3 +59,25 @@ def retry(ExceptionToCheck, tries=3, delay=3, backoff=2, logger=None):
         return f_retry
 
     return deco_retry
+
+
+class RateUnit(Enum):
+    Bs = 'B/s'
+    KBs = 'KB/s'
+    MBs = 'MB/s'
+    GBs = 'GB/s'
+    TBs = 'TB/s'
+
+
+def BytesFormat(SrcRate, unit=RateUnit.Bs):
+    Suffix = RateUnit.Bs.value
+    if unit == RateUnit.KBs:
+        Suffix = RateUnit.Bs.value
+        SrcRate = SrcRate * 1024
+    if SrcRate > 1024:
+        SrcRate = SrcRate / 1024.
+        Suffix = RateUnit.KBs.value
+    if SrcRate > 1024:
+        SrcRate = SrcRate / 1024.
+        Suffix = RateUnit.MBs.value
+    return "{num:.2f} {suff}".format(num=SrcRate, suff=Suffix)

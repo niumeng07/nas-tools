@@ -27,13 +27,13 @@
 <div class="page-body">
   <div class="container-xl">
     <div class="d-grid gap-3 grid-normal-card">
-      <a class="card card-link-pop p-0 rounded-3 overflow-hidden" href="#" data-bs-toggle="modal" data-bs-target="#modal-builtin">
+      <a class="card border-0 card-link-pop p-0 rounded-3 overflow-hidden" href="#" data-bs-toggle="modal" data-bs-target="#modal-builtin">
         <div class="card-cover card-cover-blurred text-center" style="background-color: #2E72B9">
           <span class="avatar avatar-xl avatar-thumb avatar-rounded"
                 style="background-image: url('../static/img/indexer/indexer.jpg')">
           </span>
         </div>
-        <div class="card-body text-center">
+        <div class="card-body text-center border-0">
           <div class="card-title mb-1">内建索引器</div>
           <div class="text-muted">{% if Config.pt.search_indexer == "builtin" %}<span class="badge bg-green"
                                                                                       title="已开启"></span>
@@ -41,13 +41,13 @@
         </div>
       </a>
       {% for Type, Indexer in IndexerConf.items() %}
-      <a class="card card-link-pop p-0" href="#" data-bs-toggle="modal" data-bs-target="#modal-{{ Type }}">
+      <a class="card border-0 card-link-pop p-0" href="#" data-bs-toggle="modal" data-bs-target="#modal-{{ Type }}">
         <div class="card-cover card-cover-blurred text-center {{ Indexer.background }}">
           <span class="avatar avatar-xl avatar-thumb avatar-rounded"
                 style="background-image: url('{{ Indexer.img_url }}')">
           </span>
         </div>
-        <div class="card-body text-center">
+        <div class="card-body text-center border-0">
           <div class="card-title mb-1">{{ Indexer.name }}</div>
           <div class="text-muted">{% if Config.pt.search_indexer == Type %}<span class="badge bg-green"
                                                                                       title="已开启"></span>
@@ -152,7 +152,7 @@
 </div>
 <div class="modal modal-blur fade" id="modal-indexer-statistics" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-    <div class="card modal-content" style="border-top-left-radius:var(--tblr-modal-inner-border-radius) !important; border-top-right-radius:var(--tblr-modal-inner-border-radius) !important">
+    <div class="card border-0 modal-content" style="border-top-left-radius:var(--tblr-modal-inner-border-radius) !important; border-top-right-radius:var(--tblr-modal-inner-border-radius) !important">
       <div class="card-header" style="border-top-left-radius:var(--tblr-modal-inner-border-radius) !important; border-top-right-radius:var(--tblr-modal-inner-border-radius) !important">
         <ul class="nav nav-fill card-header-tabs nav-tabs rounded-3" data-bs-toggle="tabs"
             role="tablist">
@@ -170,7 +170,7 @@
           </li>
         </ul>
       </div>
-      <div class="card-body p-0 mb-3">
+      <div class="card-body p-0 mb-3 border-0">
         <div class="tab-content">
           <div class="tab-pane fade active show" id="tabs-indexer-chart" role="tabpanel">
             <div id="indexer_chart_content"></div>

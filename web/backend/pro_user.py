@@ -13,6 +13,12 @@ from app.utils import StringUtils
 from app.indexer.indexerConf import IndexerConf
 
 MENU_CONF = {
+    '仪表盘': {
+        'name': '仪表盘',
+        'level': 1,
+        'page': 'dashboard',
+        'icon': '\n                      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dashboard " width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><polyline points="5 12 3 12 12 3 21 12 19 12"></polyline><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"></path><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"></path></svg>\n                    '
+        },
     '我的媒体库': {
         'name': '我的媒体库',
         'level': 1,
@@ -142,7 +148,7 @@ class ProUser(UserMixin):
             "admin": 1,
             "name": Config().get_config('app').get('login_user'),
             "password": Config().get_config('app').get('login_password')[6:],
-            "pris": "我的媒体库,资源搜索,探索,站点管理,订阅管理,下载管理,媒体整理,服务,系统设置",
+            "pris": "仪表盘,我的媒体库,资源搜索,探索,站点管理,订阅管理,下载管理,媒体整理,服务,系统设置",
             "level": 2,
             'search': 1
         }]

@@ -9,7 +9,8 @@ import log
 from app.utils import ExceptionUtils, StringUtils
 from app.utils.types import DownloaderType
 from app.downloader.client._base import _IDownloadClient
-
+from app.utils.commons import BytesFormat
+from app.utils.commons import RateUnit
 
 class Transmission(_IDownloadClient):
     # 下载器ID
@@ -62,6 +63,29 @@ class Transmission(_IDownloadClient):
     def connect(self):
         if self.host and self.port:
             self.trc = self.__login_transmission()
+
+    def downloader_info(self):
+        if not self.trc:
+            log.error(f"下载器未初始化")
+            return None
+        try:
+            info = self.trc.session_stats()
+            download_speed = BytesFormat(info.download_speed)
+            upload_speed = BytesFormat(info.upload_speed)
+            download_rate_limit = BytesFormat(self.trc.get_session().speed_limit_down if self.trc.get_session().speed_limit_down_enabled else 0, RateUnit.KBs)
+            upload_rate_limit = BytesFormat(self.trc.get_session().speed_limit_up if self.trc.get_session().speed_limit_up_enabled else 0, RateUnit.KBs)
+            return {
+                "download_speed": download_speed,
+                "upload_speed": upload_speed,
+                "download_rate_limit": download_rate_limit,
+                "upload_rate_limit": upload_rate_limit,
+                "download_size": info.current_stats.downloaded_bytes,
+                "upload_size": info.current_stats.uploaded_bytes,
+                "torrent_count": info.torrent_count
+            }
+        except Exception as err:
+            log.error(f"获取信息出错: {str(err)}")
+            return None
 
     def __login_transmission(self):
         """

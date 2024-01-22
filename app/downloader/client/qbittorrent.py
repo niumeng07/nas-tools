@@ -8,7 +8,8 @@ import qbittorrentapi
 from app.downloader.client._base import _IDownloadClient
 from app.utils import ExceptionUtils, StringUtils
 from app.utils.types import DownloaderType
-
+from app.utils.commons import BytesFormat
+from app.utils.commons import RateUnit
 
 class Qbittorrent(_IDownloadClient):
     # 下载器ID
@@ -30,6 +31,29 @@ class Qbittorrent(_IDownloadClient):
     password = None
     download_dir = []
     name = "测试"
+
+    def downloader_info(self):
+        if not self.qbc:
+            log.err(f"下载器未初始化")
+            return None
+        try:
+            info = self.qbc.transfer.info
+            download_speed = BytesFormat(info.dl_info_speed)
+            upload_speed = BytesFormat(info.up_info_speed)
+            download_rate_limit = BytesFormat(info.dl_rate_limit)
+            upload_rate_limit = BytesFormat(info.up_rate_limit)
+            return {
+                "download_speed": download_speed,
+                "upload_speed": upload_speed,
+                "download_rate_limit": download_rate_limit,
+                "upload_rate_limit": upload_rate_limit,
+                "download_size": info.dl_info_data,
+                "upload_size": info.up_info_data,
+                "torrent_count": self.qbc.torrents_count() if self.qbc.torrents_count() else 0
+            }
+        except Exception as err:
+            log.error(f"获取传输信息出错: {str(err)}")
+            return None
 
     def __init__(self, config):
         self._client_config = config

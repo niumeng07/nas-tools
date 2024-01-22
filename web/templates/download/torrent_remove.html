@@ -29,7 +29,7 @@
   <div class="container-xl">
     <div class="row row-cards">
       {% for Id, Attr in TorrentRemoveTasks.items() %}
-      <div class="card">
+      <div class="card border-0">
         <div class="card-header">
           <div>
             {% if Attr.enabled %}
@@ -86,7 +86,7 @@
             </a>
           </div>
         </div>
-        <div class="card-body" id="detail_{{ Attr.id }}"
+        <div class="card-body border-0" id="detail_{{ Attr.id }}"
             style="display: {% if Count > 3 %}none{% else %}block{% endif %};">
           <div class="datagrid">
             <div class="datagrid-item">

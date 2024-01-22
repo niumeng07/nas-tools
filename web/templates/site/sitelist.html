@@ -17,10 +17,10 @@
     <div class="container-xl">
       <div class="d-grid gap-3 grid-info-card">
         {% for Site in Sites %}
-        <a class="card card-link-pop"
+        <a class="card border-0 card-link-pop"
            href='javascript:void(0)'
            onclick='open_site_resources(this, "resources?site={{ Site.domain }}&title={{ Site.name }}")'>
-          <div class="card-body">
+          <div class="card-body border-0">
             <div class="row">
               <div class="col-auto">
                 <span class="avatar rounded {% if Site.public %}siteicon-{{ Site.id }}{% else %}siteicon-{{ Site.name|hash }}{% endif %}"></span>

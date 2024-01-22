@@ -11,6 +11,7 @@ from app.utils.path_utils import PathUtils
 from app.utils.types import OsType
 from config import Config, WEBDRIVER_PATH
 from math import ceil
+from pathlib import Path
 
 class SystemUtils:
 
@@ -341,7 +342,7 @@ class SystemUtils:
         return psutil.disk_usage(path).total / 1024 / 1024 / 1024
 
     @staticmethod
-    def calculate_space_usage(dir_list):
+    def get_space_statics(dir_list):
         """
         计算多个目录的总可用空间/剩余空间（单位：GB），并去除重复磁盘
         """
@@ -372,6 +373,18 @@ class SystemUtils:
                 total_free_space += SystemUtils.get_free_space(dir_path)
         return total_space, total_free_space
 
+
+    @staticmethod
+    def get_memory_statics():
+        memory_stats = psutil.virtual_memory()
+        total_memory = memory_stats.total
+        available_memory = memory_stats.available
+        # free_memory = memory_stats.free
+        memory_used_percent = memory_stats.percent
+        total_memory = total_memory / 1024. /1024 / 1024
+        available_memory = available_memory / 1024. / 1024 /1024
+        return total_memory, available_memory, memory_used_percent
+
     @staticmethod
     def get_all_processes():
 
@@ -397,6 +410,20 @@ class SystemUtils:
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
         return processes
+
+    @staticmethod
+    def is_bluray_dir(dir_path: Path) -> bool:
+        """
+        判断是否为蓝光原盘目录
+        """
+        # 蓝光原盘目录必备的文件或文件夹
+        required_files = ['BDMV', 'CERTIFICATE']
+        # 检查目录下是否存在所需文件或文件夹
+        for item in required_files:
+            if (dir_path / item).exists():
+                return True
+        return False
+
 
     # 缩略路径
     @staticmethod

@@ -39,13 +39,13 @@
   <div class="container-xl">
     <div class="d-grid gap-3 grid-normal-card align-items-start">
     {% for Id, Attr in MessageClients.items() %}
-      <a class="card card-link-pop p-0 rounded-3 overflow-hidden" href="javascript:void(0)" onclick="show_edit_message_client_modal('{{ Id }}')">
+      <a class="card border-0 card-link-pop p-0 rounded-3 overflow-hidden" href="javascript:void(0)" onclick="show_edit_message_client_modal('{{ Id }}')">
         <div class="card-cover card-cover-blurred text-center"
           {% if Channels[Attr.type].color %}style="background-color: {{ Channels[Attr.type].color }}"{% endif %}>
           <span class="avatar avatar-xl avatar-thumb avatar-rounded"
                 style="background-image: url('{{ Channels[Attr.type].img_url }}')"></span>
         </div>
-        <div class="card-body text-center">
+        <div class="card-body text-center border-0">
           <div class="card-title mb-1">{% if Attr.enabled == 1 %}<span class="badge bg-green" title="已启用" data-bs-toggle="tooltip"></span>{% endif %} {{ Attr.name }}</div>
           <div class="text-muted">
             {% if Attr.config.get("host")  %}
