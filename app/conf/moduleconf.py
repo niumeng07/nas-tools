@@ -473,6 +473,10 @@ class ModuleConf(object):
                 "name": "站点签到",
                 "fuc_name": "site_signin"
             },
+            "invites_signin": {
+                "name": "药丸签到",
+                "fuc_name": "invites_signin"
+            },
             "site_message": {
                 "name": "站点消息",
                 "fuc_name": "site_message"
