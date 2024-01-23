@@ -149,6 +149,8 @@ class EventType(Enum):
     RefreshMediaServer = "refresh.mediaserver"
     # 站点签到
     SiteSignin = "site.signin"
+    # 药丸论坛签到
+    InvitesSiteSignin = "invites.signin"
 
 
 # 系统配置Key字典

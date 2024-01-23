@@ -1,4 +1,3 @@
-![logo-blue](https://user-images.githubusercontent.com/51039935/197520391-f35db354-6071-4c12-86ea-fc450f04bc85.png)
 # NAS媒体库管理工具
 
 [![GitHub stars](https://img.shields.io/github/stars/niumeng07/nas-tools?style=plastic)](https://github.com/niumeng07/nas-tools/stargazers)
@@ -11,9 +10,6 @@
 
 Docker：
 * https://hub.docker.com/r/niumeng07/nas-tools 
-
-TG频道：
-API: http://localhost:3000/api/v1/
 
 
 ## 功能：
