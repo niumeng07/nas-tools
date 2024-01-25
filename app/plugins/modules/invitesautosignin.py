@@ -196,7 +196,6 @@ class InvitesAutoSignIn(_IPluginModule):
             self._cookie = config.get("cookie")
             self._notify = config.get("notify")
             self._onlyonce = config.get("onlyonce")
-            log.info(f"invitesautosign init_config params: {self._enabled}, {self._cron}, {self._cookie}, {self._notify}, {self._onlyonce}")
 
         # 遍历列表并删除日期超过7天的字典项
         today = datetime.now()

@@ -81,7 +81,9 @@ class Transmission(_IDownloadClient):
                 "upload_rate_limit": upload_rate_limit,
                 "download_size": info.current_stats.downloaded_bytes,
                 "upload_size": info.current_stats.uploaded_bytes,
-                "torrent_count": info.torrent_count
+                "torrent_count": info.torrent_count,
+                "host": self.host,
+                "port": self.port
             }
         except Exception as err:
             log.error(f"获取信息出错: {str(err)}")

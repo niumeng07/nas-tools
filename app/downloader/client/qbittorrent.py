@@ -49,7 +49,9 @@ class Qbittorrent(_IDownloadClient):
                 "upload_rate_limit": upload_rate_limit,
                 "download_size": info.dl_info_data,
                 "upload_size": info.up_info_data,
-                "torrent_count": self.qbc.torrents_count() if self.qbc.torrents_count() else 0
+                "torrent_count": self.qbc.torrents_count() if self.qbc.torrents_count() else 0,
+                "host": self.host,
+                "port": self.port
             }
         except Exception as err:
             log.error(f"获取传输信息出错: {str(err)}")
