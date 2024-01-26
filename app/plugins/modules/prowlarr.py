@@ -21,7 +21,7 @@ class Prowlarr(_IPluginModule):
     # 插件名称
     module_name = "Prowlarr"
     # 插件描述
-    module_desc = "让内荐索引器支持检索Prowlarr站点资源"
+    module_desc = "让内建索引器支持检索Prowlarr站点资源"
     # 插件图标
     module_icon = "prowlarr.png"
     # 主题色

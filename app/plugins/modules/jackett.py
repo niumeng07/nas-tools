@@ -20,7 +20,7 @@ class Jackett(_IPluginModule):
     # 插件名称
     module_name = "Jackett"
     # 插件描述
-    module_desc = "让内荐索引器支持检索Jackett站点资源"
+    module_desc = "让内建索引器支持检索Jackett站点资源"
     # 插件图标
     module_icon = "jackett.png"
     # 主题色

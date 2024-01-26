@@ -8,7 +8,7 @@ body, .page {
 }
 
 .theme-light .page {
-    background-image: url(https://api.dujin.org/bing/1920.php);
+    /*background-image: url(https://api.dujin.org/bing/1920.php);*/
     background-image: url(https://api.dujin.org/pic/);
     background-position: center;
     background-size: cover;
@@ -34,7 +34,7 @@ body, .page {
 
 
 .theme-dark .page {
-    background-image: url(https://api.dujin.org/bing/1920.php);
+    /*background-image: url(https://api.dujin.org/bing/1920.php);*/
     background-image: url(https://api.dujin.org/pic/);
     background-position: center;
     background-size: cover;

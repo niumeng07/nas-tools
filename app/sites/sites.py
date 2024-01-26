@@ -279,6 +279,9 @@ class Sites:
             site_url = site_url + '/index.php'
         elif 'zmpt' in site_url:
             site_url = site_url + '/index.php'
+        elif 'star-space' in site_url:
+            site_url = site_url + '/attendance.php'
+
         chrome = ChromeHelper()
         if site_info.get("chrome") and chrome.get_status():
             # 计时
