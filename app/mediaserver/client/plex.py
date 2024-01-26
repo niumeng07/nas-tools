@@ -582,39 +582,17 @@ class Plex(_IMediaClient):
         return ret_resume
 
     def get_latest(self, num=20):
-        """
-        获取最近添加媒体
-        """
-        if not self._plex:
-            return []
-        items = self._plex.fetchItems('/library/recentlyAdded', container_start=0, container_size=num)
-        ret_resume = []
-        for item in items:
-            item_type = MediaType.MOVIE.value if item.TYPE == "movie" else MediaType.TV.value
-            link = self.get_play_url(item.key)
-            title = item.title if item_type == MediaType.MOVIE.value else \
-                "%s 第%s季" % (item.parentTitle, item.index)
-            image = self.get_nt_image_url(item.posterUrl)
-            ret_resume.append({
-                "id": item.key,
-                "name": title,
-                "type": item_type,
-                "image": image,
-                "link": link
-            })
-        return ret_resume
-
-    def get_category_latest(self, num=16):
+        if not self._host or not self._plex:
+            return {}
         libraries = self._plex.library.sections()
     
-        category_latest = {}
+        latests = {}
     
         for library in libraries:
-            category_key = library.title
-            category_latest[category_key] = []
-            items = library.recentlyAdded()
+            library_title = library.title
+            latests[library_title] = []
+            items = library.recentlyAdded(maxresults=num)
             for item in items[0:num]:
-                # print(type(item))
                 item_type = MediaType.TV.value
                 if item.TYPE == "movie":
                     item_type = MediaType.MOVIE.value
@@ -623,7 +601,7 @@ class Plex(_IMediaClient):
                 link = self.get_play_url(item.key)
                 title = item.title
                 image = self.get_nt_image_url(item.posterUrl)
-                category_latest[category_key].append({
+                latests[library_title].append({
                     "id": item.key,
                     "name": title,
                     "type": item_type,
@@ -631,4 +609,4 @@ class Plex(_IMediaClient):
                     "link": link
                 })
     
-        return category_latest
+        return latests 

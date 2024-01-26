@@ -64,7 +64,7 @@ class Transmission(_IDownloadClient):
         if self.host and self.port:
             self.trc = self.__login_transmission()
 
-    def downloader_info(self):
+    def downloader_statics(self):
         if not self.trc:
             log.error(f"下载器未初始化")
             return None

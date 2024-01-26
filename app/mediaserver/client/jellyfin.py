@@ -660,10 +660,10 @@ class Jellyfin(_IMediaClient):
                         "image": image,
                         "link": link
                     })
-                return ret_latest
+                return {"": ret_latest}
             else:
                 log.error(f"【{self.client_name}】Users/Items/Latest 未获取到返回数据")
         except Exception as e:
             ExceptionUtils.exception_traceback(e)
             log.error(f"【{self.client_name}】连接Users/Items/Latest出错：" + str(e))
-        return []
+        return {}

@@ -293,27 +293,19 @@ def index():
     Resumes = MediaServer().get_resume()
 
     # 最近添加
-    Latests= MediaServer().get_category_latest()
+    Latests= MediaServer().get_latest()
 
     return render_template("index.html",
                            ServerSucess=ServerSucess,
-                           MediaCount={'MovieCount': MediaCounts.get("Movie"),
-                                       'SeriesCount': MediaCounts.get("Series"),
-                                       'SongCount': MediaCounts.get("Music"),
-                                       "EpisodeCount": MediaCounts.get("Episodes")},
+                           MediaCount=MediaCounts,
                            Activitys=Activity,
-                           UserCount=MediaCounts.get("User"),
-                           FreeSpace=LibrarySpaces.get("FreeSpace"),
-                           TotalSpace=LibrarySpaces.get("TotalSpace"),
-                           UsedSapce=LibrarySpaces.get("UsedSapce"),
-                           UsedPercent=LibrarySpaces.get("UsedPercent"),
+                           LibrarySpaces=LibrarySpaces,
                            MediaServerType=MSType,
                            Librarys=Librarys,
                            LibrarySyncConf=LibrarySyncConf,
                            LibraryManageConf=LibraryManageConf,
                            Resumes=Resumes,
-                           Latests=Latests
-                           )
+                           Latests=Latests)
 
 
 # 仪表盘
@@ -341,7 +333,7 @@ def dashboard():
     # 最新入库统计
 
     # 下载器信息
-    DownloaderInfo = Downloader().downloader_info()
+    DownloaderInfo = Downloader().downloader_statics()
 
     # 后台任务
 
@@ -352,12 +344,9 @@ def dashboard():
 
     return render_template("dashboard.html",
                            ServerSucess=ServerSucess,
-                           MediaCount={'MovieCount': MediaCounts.get("Movie"),
-                                       'SeriesCount': MediaCounts.get("Series"),
-                                       'SongCount': MediaCounts.get("Music"),
-                                       "EpisodeCount": MediaCounts.get("Episodes")},
+                           MediaCount=MediaCounts,
                            UserCount=MediaCounts.get("User"),
-                           SpaceStatics=LibrarySpaces,
+                           LibrarySpaces=LibrarySpaces,
                            MemoryStatics=MemorySpaces,
                            DownloaderInfo=DownloaderInfo,
                            MediaServerType=MSType

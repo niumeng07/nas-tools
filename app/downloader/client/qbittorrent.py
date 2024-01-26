@@ -32,9 +32,9 @@ class Qbittorrent(_IDownloadClient):
     download_dir = []
     name = "测试"
 
-    def downloader_info(self):
+    def downloader_statics(self):
         if not self.qbc:
-            log.err(f"下载器未初始化")
+            log.error(f"下载器未初始化")
             return None
         try:
             info = self.qbc.transfer.info
