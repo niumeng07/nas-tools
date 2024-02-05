@@ -164,14 +164,14 @@ class InvitesAutoSignIn(_IPluginModule):
                 {% for Item in Results %}
                   <tr id="indexer">
                     <td>{{ Item["date"] }}</td>
-                    <td>{{ Item["result"] }}</td>
+                    <td>{{ Item["results"] }}</td>
                     {% if Item["money"] %}
                     <td>{{ Item["money"] }}</td>
                     {% else %}
                     <td>0</td>
                     {% endif %}
                     {% if Item["money"] %}
-                    <td>{{ Item["continuousCheckIn"] }}</td>
+                    <td>{{ Item["totalContinuousCheckIn"] }}</td>
                     {% else %}
                     <td>0</td>
                     {% endif %}
@@ -182,7 +182,9 @@ class InvitesAutoSignIn(_IPluginModule):
             </table>
           </div>
         """
-        signin_history = self.get_history('history') or []
+        signin_history = self.get_history() or []
+        signin_history = [item[0] for item in signin_history]
+
         return "签到记录", Template(template).render(
             ResultsCount=len(signin_history), Results=signin_history), None
 
@@ -265,7 +267,7 @@ class InvitesAutoSignIn(_IPluginModule):
         self.delete_history(sevenday_before)
 
         # 读取历史记录
-        history = self.get_history('history') or []
+        history = self.get_history() or []
 
         res = RequestUtils(cookies=self._cookie,
                            proxies=Config().get_proxies()).get_res(url="https://invites.fun")
