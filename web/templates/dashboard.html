@@ -8,7 +8,7 @@
     <div class="container-xl">
       <div class="modal-body py-0">
         <div class="col-md-12">
-          <div class="row align-items-center row-eq-height" , style="position: relative">
+          <div class="row align-items-center row-eq-height", style="position: relative">
             <div class="col-lg-4">
               <!-- 系统信息 -->
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3">
@@ -324,6 +324,19 @@
         ],
         yAxis: [
           {
+            name: "电视剧/动漫",
+            nameTextStyle:
+            {
+              color: "#65ABE7",
+            },
+            type: "value",
+          },
+          {
+            name: "电影",
+            nameTextStyle:
+            {
+              color: "#FFBF00",
+            },
             type: "value",
           },
         ],
@@ -336,7 +349,10 @@
             emphasis: {
               focus: "series",
             },
+            yAxisIndex: 1,
             data: ret.MovieNums,
+            smooth: true,
+            color: "#FFBF00",
           },
           {
             name: "电视剧",
@@ -346,7 +362,10 @@
             emphasis: {
               focus: "series",
             },
+            yAxisIndex: 0,
             data: ret.TvNums,
+            smooth: true,
+            color: "#65ABE7",
           },
           {
             name: "动漫",
@@ -356,7 +375,10 @@
             emphasis: {
               focus: "series",
             },
+            yAxisIndex: 0,
             data: ret.AnimeNums,
+            smooth: true,
+            color: "#444BE7",
           },
         ],
       };

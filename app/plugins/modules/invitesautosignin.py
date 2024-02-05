@@ -49,9 +49,6 @@ class InvitesAutoSignIn(_IPluginModule):
     # 可使用的用户级别
     auth_level = 1
 
-    # 上次运行结果属性
-    _last_run_results_list = []
-
     # 私有属性
     eventmanager = None
     _scheduler = None
@@ -185,8 +182,9 @@ class InvitesAutoSignIn(_IPluginModule):
             </table>
           </div>
         """
+        signin_history = self.get_history('history') or []
         return "签到记录", Template(template).render(
-            ResultsCount=len(self._last_run_results_list), Results=self._last_run_results_list), None
+            ResultsCount=len(signin_history), Results=signin_history), None
 
     def init_config(self, config=None):
 
@@ -200,13 +198,6 @@ class InvitesAutoSignIn(_IPluginModule):
         # 遍历列表并删除日期超过7天的字典项
         today = datetime.now()
         seven_days_ago = today - timedelta(days=7)
-
-        for item in self._last_run_results_list[:]:
-            date_str = item.get("date")
-            if date_str:
-                date_obj = datetime.strptime(date_str, '%Y-%m-%d %H:%M:%S')
-                if date_obj < seven_days_ago:
-                    self._last_run_results_list.remove(item)
 
         # 停止现有任务
         self.stop_service()
@@ -273,10 +264,19 @@ class InvitesAutoSignIn(_IPluginModule):
         # 删除昨天历史
         self.delete_history(sevenday_before)
 
+        # 读取历史记录
+        history = self.get_history('history') or []
+
         res = RequestUtils(cookies=self._cookie,
                            proxies=Config().get_proxies()).get_res(url="https://invites.fun")
         if not res or res.status_code != 200:
             log.error(f"请求药丸错误 {res}")
+
+            # 发送通知
+            if self._notify:
+                self.send_message(
+                    title="【药丸签到任务完成】",
+                    text="签到失败，请求药丸错误")
             return
 
         # 获取csrfToken
@@ -284,6 +284,12 @@ class InvitesAutoSignIn(_IPluginModule):
         csrfToken = re.findall(pattern, res.text)
         if not csrfToken:
             log.error("请求csrfToken失败")
+
+            # 发送通知
+            if self._notify:
+                self.send_message(
+                    title="【药丸签到任务完成】",
+                    text="签到失败，请求csrfToken失败")
             return
 
         csrfToken = csrfToken[0]
@@ -298,6 +304,12 @@ class InvitesAutoSignIn(_IPluginModule):
             log.info(f"获取userid成功 {userId}")
         else:
             log.error("未找到userId")
+
+            # 发送通知
+            if self._notify:
+                self.send_message(
+                    title="【药丸签到任务完成】",
+                    text="签到失败，未找到userId")
             return
 
         headers = {
@@ -341,19 +353,15 @@ class InvitesAutoSignIn(_IPluginModule):
                 text=f"累计签到 {totalContinuousCheckIn} \n"
                      f"剩余药丸 {money}")
 
-        # 读取历史记录
-        history = self.get_history('history') or []
-
         history.append({
             "date": datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
+            "results": "签到成功",
             "totalContinuousCheckIn": totalContinuousCheckIn,
             "money": money
         })
-        _result = {'date': today, 'result': '签到成功', 'continuousCheckIn': totalContinuousCheckIn, 'money': money}
-        self._last_run_results_list.insert(0, _result)
 
         # 保存签到历史
-        self.history(key=today, value=history)
+        self.history(key=today.strftime('%Y-%m-%d %H:%M:%S'), value=history)
 
 
     def stop_service(self):

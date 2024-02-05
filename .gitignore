@@ -10,3 +10,5 @@
 nohup.out
 .DS_Store
 ._*
+*.swp
+.vscode
