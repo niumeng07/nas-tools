@@ -1,11 +1,16 @@
 import json
 import os
+import pytz
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
+from apscheduler.triggers.cron import CronTrigger
+
 
 import log
 from app.conf import SystemConfig
 from app.helper import DbHelper
 from app.message import Message
+from app.utils.commons import time_delta_format
 from config import Config
 
 
@@ -54,6 +59,25 @@ class _IPluginModule(metaclass=ABCMeta):
     module_order = 0
     # 可使用的用户级别
     auth_level = 1
+
+    _cron = None
+    next_run_time = None
+    next_run_time_diff = None
+
+    def get_next_run_time(self):
+        """
+        获取插件下一次运行的时间
+        """
+        if not self._cron:
+            return None, None
+
+        trigger = CronTrigger.from_crontab(self._cron)
+        tz = pytz.timezone(Config().get_timezone())
+        next_run_time = trigger.get_next_fire_time(datetime.now(tz=tz), datetime.now(tz=tz))
+        next_run_time_diff = time_delta_format(next_run_time,
+                                               datetime.now(tz=tz))
+        next_run_time = next_run_time.strftime('%Y%m%d %H:%M:%S')
+        return next_run_time, next_run_time_diff
 
     @staticmethod
     @abstractmethod

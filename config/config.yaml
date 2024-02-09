@@ -26,7 +26,7 @@ app:
   # 【WEB管理页面登录用户】，默认admin
   login_user: admin
   # 【WEB管理页面登录密码】：默认password，如果是全数字密码，要用''括起来
-  login_password: password
+  login_password: '[hash]pbkdf2:sha256:600000$QJ9Dgmf2HiU5EqRW$b161fbd82bc3ed43527e05f1d82031aa16a32f96559b57bfca6d3ba373b05c01'
   # 【WEB管理界面使用的HTTPS的证书和KEY的路径】，留空则不启用HTTPS
   ssl_cert: ''
   ssl_key: ''
@@ -37,7 +37,7 @@ app:
     http:
   # 【TMDB API KEY】：需要在https://www.themoviedb.org/申请，必须配置，否则无法识别媒体资源和重命名
   # 以下地址需要网络能够正常访问：api.themoviedb.org、webservice.fanart.tv
-  rmt_tmdbkey: 
+  rmt_tmdbkey: '1231234433444'
   # 【使用TMDB服务器域名】：api.themoviedb.org、api.tmdb.org，如api.themoviedb.org无法访问可偿试使用api.tmdb.org
   tmdb_domain: api.tmdb.org
   # 【TMDB图片代理地址】：加速图片下载，留空使用TMDB官方地址

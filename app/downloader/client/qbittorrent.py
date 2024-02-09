@@ -32,6 +32,9 @@ class Qbittorrent(_IDownloadClient):
     download_dir = []
     name = "测试"
 
+    def get_torrents_count(self):
+        return len(self.qbc.torrents_info())
+
     def downloader_statics(self):
         if not self.qbc:
             log.error(f"下载器未初始化")
@@ -49,7 +52,7 @@ class Qbittorrent(_IDownloadClient):
                 "upload_rate_limit": upload_rate_limit,
                 "download_size": info.dl_info_data,
                 "upload_size": info.up_info_data,
-                "torrent_count": self.qbc.torrents_count() if self.qbc.torrents_count() else 0,
+                "torrent_count": self.get_torrents_count(),
                 "host": self.host,
                 "port": self.port
             }

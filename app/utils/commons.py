@@ -3,6 +3,7 @@ import threading
 import time
 from collections import OrderedDict
 from enum import Enum
+from datetime import timedelta, datetime
 
 # 线程锁
 lock = threading.RLock()
@@ -27,6 +28,19 @@ def singleton(cls):
         return INSTANCES[cls]
 
     return _singleton
+
+
+def time_delta_format(time1, time2):
+    time_delta = time1 - time2
+    delta_days = time_delta.days
+    delta_seconds = time_delta.seconds
+    delta_hours = int(delta_seconds / 3600)
+    delta_minutes = int((delta_seconds % 3600) / 60)
+    if delta_days or delta_hours or delta_minutes:
+        ret_list = [(delta_days, '天'), (delta_hours, '小时'), (delta_minutes, '分')]
+        return ''.join([str(item[0]) + item[1] for item in ret_list if item[0] > 0])
+    else:
+        return '运行中'
 
 
 # 重试装饰器

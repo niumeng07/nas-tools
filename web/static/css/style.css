@@ -41,7 +41,7 @@ body, .page {
 }
 
 .theme-dark .navbar, .theme-dark .alert:not(.alert-important), .theme-dark .card, .theme-dark .card-footer, .theme-dark .card-stacked::after, .theme-dark .footer:not(.footer-transparent), .theme-dark .modal-content, .theme-dark .modal-header, .theme-dark .toast, .theme-dark .toast-header {
-    background-color: rgba(29, 39, 59, 0.7)!important;
+    background-color: rgba(29, 39, 59, 0.9)!important;
 }
 
 .theme-dark .dropdown-menu {

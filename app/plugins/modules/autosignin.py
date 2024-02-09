@@ -25,6 +25,7 @@ from app.utils.types import EventType
 from config import Config
 from jinja2 import Template
 import random
+from apscheduler.triggers.cron import CronTrigger
 
 
 class AutoSignIn(_IPluginModule):
@@ -346,10 +347,7 @@ class AutoSignIn(_IPluginModule):
             # 周期运行
             if self._cron:
                 self.info(f"定时签到服务启动，周期：{self._cron}")
-                SchedulerUtils.start_job(scheduler=self._scheduler,
-                                         func=self.sign_in,
-                                         func_desc="自动签到",
-                                         cron=str(self._cron))
+                self._scheduler.add_job(self.sign_in, CronTrigger.from_crontab(self._cron), name='自动签到')
 
             # 启动任务
             if self._scheduler.get_jobs():

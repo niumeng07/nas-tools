@@ -29,7 +29,8 @@ class SchedulerUtils:
                 try:
                     scheduler.add_job(func=func,
                                       trigger=CronTrigger.from_crontab(cron),
-                                      next_run_time=next_run_time)
+                                      next_run_time=next_run_time,
+                                      name=func_desc)
                 except Exception as e:
                     log.info("%s时间cron表达式配置格式错误：%s %s" % (func_desc, cron, str(e)))
             elif '-' in cron:
@@ -57,7 +58,8 @@ class SchedulerUtils:
                                       "cron",
                                       hour=start_hour,
                                       minute=start_minute,
-                                      next_run_time=next_run_time)
+                                      next_run_time=next_run_time,
+                                      name=func_desc)
                     log.info("%s服务时间范围随机模式启动，起始时间于%s:%s" % (
                         func_desc, str(start_hour).rjust(2, '0'), str(start_minute).rjust(2, '0')))
                 except Exception as e:
@@ -73,7 +75,8 @@ class SchedulerUtils:
                                   "cron",
                                   hour=hour,
                                   minute=minute,
-                                  next_run_time=next_run_time)
+                                  next_run_time=next_run_time,
+                                  name=func_desc)
                 log.info("%s服务启动" % func_desc)
             else:
                 try:
@@ -85,7 +88,8 @@ class SchedulerUtils:
                     scheduler.add_job(func,
                                       "interval",
                                       hours=hours,
-                                      next_run_time=next_run_time)
+                                      next_run_time=next_run_time,
+                                      name=func_desc)
                     log.info("%s服务启动" % func_desc)
 
     @staticmethod
@@ -107,4 +111,5 @@ class SchedulerUtils:
         scheduler.add_job(func,
                           "date",
                           run_date=datetime.datetime(year, month, day, hour, minute, second),
-                          next_run_time=next_run_time)
+                          next_run_time=next_run_time,
+                          name=func_desc)

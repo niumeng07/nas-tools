@@ -1,17 +1,19 @@
-{% import 'macro/svg.html' as SVG %} {% import 'macro/oops.html' as OOPS %}
+{% import 'macro/svg.html' as SVG %}
+{% import 'macro/oops.html' as OOPS %}
 
 <body class="layout-fluid">
   <script src="../static/js/modules/echarts.min.js"></script>
-  <!-- 业务页面代码-->
+
+  <!-- 系统监控 -->
   {% if ServerSucess %}
   <div class="page-body">
     <div class="container-xl">
       <div class="modal-body py-0">
         <div class="col-md-12">
-          <div class="row align-items-center row-eq-height", style="position: relative">
+          <div class="row align-items-center row-eq-height" style="position: relative">
             <div class="col-lg-4">
               <!-- 系统信息 -->
-              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 350px">
                 <div class="card-header">
                   <h3 class="card-title">
                     系统信息
@@ -22,37 +24,39 @@
                 <div class="card-body border-0">
                   <dl class="row row-eq-height">
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">存储空间</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ LibrarySpaces.TotalSpace }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                            {{ LibrarySpaces.UsedPercent }}%
-                          </span>
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-vimeo avatar text-white">{{ SVG.hard_disk_storage() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">存储空间</div>
+                          <div class="me-auto">
+                            <div>
+                              <div class="h1 mb-0 me-2" style="float:left">{{ LibrarySpaces.TotalSpace }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                LibrarySpaces.UsedPercent }}% </div>
+                            </div>
+                            <div style="clear:both"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
                     <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width:{{ LibrarySpaces.UsedPercent }}%"
+                      <div class="progress-bar bg-blue" style="width:{{ LibrarySpaces.UsedPercent }}%"
                         role="progressbar" aria-valuenow="{{ UsedPercent }}" aria-valuemin="0" aria-valuemax="100">
                       </div>
                     </div>
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">内存</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ MemoryStatics.TotalMemory }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                            {{ MemoryStatics.UsedPercent }}%
-                          </span>
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-green avatar text-white">{{ SVG.memory() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">内存</div>
+                          <div class="me-auto">
+                            <div>
+                              <div class="h1 mb-0 me-2" style="float:left">{{ MemoryStatics.TotalMemory }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                MemoryStatics.UsedPercent }}% </div>
+                            </div>
+                            <div style="clear:both"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -62,14 +66,14 @@
                       </div>
                     </div>
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">用户数</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">{{ UserCount }}</div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                          </span>
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-yellow avatar text-white">{{ SVG.user() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">用户数</div>
+                          <div class="me-auto">
+                            <div class="h1 mb-0 me-2">{{ UserCount }}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -82,17 +86,184 @@
               </div>
             </div>
             <!-- 系统信息结束 -->
+            <div class="col-lg-4">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 350px">
+                <div class="card-header">
+                  <h3 class="card-title">后台任务</h3>
+                  <div class="ms-auto">
+                    <a href="javascript:show_bg_runnings()" class="btn-icon">
+                      {{ SVG.list_details() }}
+                    </a>
+                  </div>
+                  <div class="ms-3 text-muted">
+                    共 {{ BackgroundJobsCount }} 条记录
+                  </div>
+                </div>
+                <div id="table-background-tasks" class="table-responsive">
+                  <table class="table table-vcenter card-table table-hover" style="height: 150px">
+                    <tbody class="table-tbody">
+                      {% if BackgroundJobsCount > 0 %}
+                      {% for item in BackgroundRunnings[0:8] %}
+                      <tr>
+                        <td class="sort-name">
+                          <div class="d-flex py-1 align-items-center">
+                            <small>{{ item.name }}</small>
+                          </div>
+                        </td>
+                        <td class="sort-data">
+                          <div class="flex-fill">
+                            <small>{{ item.next_run_time_diff }}</small>
+                          </div>
+                        </td>
+                        <td class="sort-type">
+                          <div class="flex-fill">
+                            {% if item.type == 'service' %}
+                            <span class="badge text-white bg-blue mb-1">
+                              <small>S</small>
+                            </span>
+                            {% else %}
+                            <span class="badge text-white bg-yellow mb-1">
+                              <small>P</small>
+                            </span>
+                            {% endif %}
+                          </div>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                      {% else %}
+                      <tr>
+                        <td colspan="8" align="center">没有任务</td>
+                      </tr>
+                      {% endif %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
+  <!-- 媒体库信息 -->
+  {% if ServerSucess %}
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="modal-body py-0">
+        <div class="col-md-12">
+          <div class="row align-items-center row-eq-height" , style="position: relative">
+            <!-- 媒体库信息 -->
+            <div class="col-lg-4">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 350px">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    媒体库信息
+                  </h3>
+                  <div class="card-actions btn-actions">
+                  </div>
+                </div>
+                <div class="card-body border-0">
+                  <dl class="row row-eq-height">
+                    <div class="card-body border-0">
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-pink avatar text-white">{{ SVG.movie() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">电影</div>
+                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ MediaCount.Movie }}</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-progress" style="overflow: hidden">
+                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
+                        aria-valuemin="0" aria-valuemax="100">
+                      </div>
+                    </div>
+                    <div class="card-body border-0">
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-green avatar text-white">{{ SVG.device_tv() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">电视剧/动漫</div>
+                          <div class="me-auto">
+                            <div>
+                              <div class="h1 mb-0 me-2" style="float:left">{{ MediaCount.Series }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                MediaCount.Episodes }}</div>
+                            </div>
+                            <div style="clear:both"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-progress" style="overflow: hidden">
+                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
+                        aria-valuemin="0" aria-valuemax="100">
+                      </div>
+                    </div>
+                    <div class="card-body border-0">
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-lime avatar text-white">{{ SVG.music() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">音乐</div>
+                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ MediaCount.Music }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="card-progress" style="overflow: hidden">
+                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
+                        aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+            <!-- 媒体库信息结束 -->
+            <!--  最新入库统计 -->
+            <div class="col-lg-8">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 350px">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    最新入库统计
+                  </h3>
+                  <div class="card-actions btn-actions">
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <div class="col-lg-12">
+                    <div class="card-body border-0">
+                      <div id="media_library_statics" style="height: 244%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--  最新入库统计结束 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 后台任务监控 -->
+  {% if ServerSucess %}
+  <div class="page-body">
+    <div class="container-xl">
+      <div class="modal-body py-0">
+        <div class="col-md-12">
+          <div class="row align-items-center row-eq-height" , style="position: relative">
             {% for Name, Info in DownloaderInfo.items() %}
             <!--单个下载器信息-->
             <div class="col-lg-4">
-              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 350px">
                 <div class="card-header">
                   <h3 class="card-title">
                     下载器信息
                   </h3>
                   <div class="card-actions btn-actions">
-                    <span class="text-green d-inline-flex align-items-center lh-1">
+                    <span class="text-muted d-inline-flex align-items-center lh-1">
                       <a href="http://{{ Info.host }}:{{ Info.port }}" style="color: green">{{ Name }}</a>
                     </span>
                   </div>
@@ -100,12 +271,15 @@
                 <div class="card-body border-0">
                   <dl class="row row-eq-height">
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">种子数</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ Info.torrent_count }}
+                      <div class="row align-items-center">
+                        {% if Name == "qBitTorrent" %}
+                        <div class="col-auto bg-blue avatar text-white">{{ SVG.qbittorrent() }}</div>
+                        {% else %}
+                        <div class="col-auto bg-cyan avatar text-white">{{ SVG.transmission() }}</div>
+                        {% endif %}
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">种子数</div>
+                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}</div>
                         </div>
                       </div>
                     </div>
@@ -115,17 +289,18 @@
                       </div>
                     </div>
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">下载速度</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ Info.download_speed }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                            {{ Info.download_rate_limit }}
-                          </span>
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-indigo avatar text-white">{{ SVG.downloader_dlrate() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">下载速度</div>
+                          <div class="me-auto">
+                            <div>
+                              <div class="h1 mb-0 me-2" style="float:left">{{ Info.download_speed }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                Info.download_rate_limit }}</div>
+                            </div>
+                            <div style="clear:both"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -135,17 +310,18 @@
                       </div>
                     </div>
                     <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">上传速度</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ Info.upload_speed }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                            {{ Info.upload_rate_limit }}
-                          </span>
+                      <div class="row align-items-center">
+                        <div class="col-auto bg-purple avatar text-white">{{ SVG.downloader_uprate() }}</div>
+                        <div class="col">
+                          <div class="d-flex align-items-center subheader">上传速度</div>
+                          <div class="me-auto">
+                            <div>
+                              <div class="h1 mb-0 me-2" style="float:left">{{ Info.upload_speed }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                Info.upload_rate_limit }}</div>
+                            </div>
+                            <div style="clear:both"></div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -164,108 +340,55 @@
         </div>
       </div>
     </div>
-  </div>
-  {% endif %}
 
-  <!-- 业务页面代码-->
-  {% if ServerSucess %}
-  <div class="page-body">
-    <div class="container-xl">
-      <div class="modal-body py-0">
-        <div class="col-md-12">
-          <div class="row align-items-center row-eq-height" , style="position: relative">
-            <!-- 媒体库信息 -->
-            <div class="col-lg-4">
-              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3">
-                <div class="card-header">
-                  <h3 class="card-title">
-                    媒体库信息
-                  </h3>
-                  <div class="card-actions btn-actions">
-                  </div>
-                </div>
-                <div class="card-body border-0">
-                  <dl class="row row-eq-height">
-                    <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">电影</div>
+    <div class="modal modal-blur fade" id="modal-show-bg-runnings" tabindex="-1" role="dialog" aria-hidden="true"
+      data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">后台任务</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div id="table-background-tasks" class="table-responsive">
+              <table class="table table-vcenter card-table table-hover" style="height: 150px">
+                <tbody class="table-tbody">
+                  {% if BackgroundJobsCount > 0 %}
+                  {% for item in BackgroundRunnings %}
+                  <tr>
+                    <td class="sort-name">
+                      <div class="d-flex py-1 align-items-center">
+                        <small>{{ item.name }}</small>
                       </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ MediaCount.Movie }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                          </span>
-                        </div>
+                    </td>
+                    <td class="sort-data">
+                      <div class="flex-fill">
+                        <small>{{ item.next_run_time_diff }}</small>
                       </div>
-                    </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100">
+                    </td>
+                    <td class="sort-type">
+                      <div class="flex-fill">
+                        {% if item.type == 'service' %}
+                        <span class="badge text-white bg-blue mb-1">
+                          <small>{{ item.type }}</small>
+                        </span>
+                        {% else %}
+                        <span class="badge text-white bg-yellow mb-1">
+                          <small>{{ item.type }}</small>
+                        </span>
+                        {% endif %}
                       </div>
-                    </div>
-                    <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">电视剧/动漫</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">
-                          {{ MediaCount.Series }}
-                        </div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                            {{ MediaCount.Episodes }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100">
-                      </div>
-                    </div>
-                    <div class="card-body border-0">
-                      <div class="d-flex align-items-center">
-                        <div class="subheader">音乐</div>
-                      </div>
-                      <div class="d-flex align-items-baseline">
-                        <div class="h1 mb-0 me-2">{{ MediaCount.Music }}</div>
-                        <div class="me-auto">
-                          <span class="text-green d-inline-flex align-items-center lh-1">
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                  </dl>
-                </div>
-              </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="8" align="center">没有任务</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
             </div>
-            <!-- 媒体库信息结束 -->
-            <!--  最新入库统计 -->
-            <div class="col-lg-8">
-              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3">
-                <div class="card-header">
-                  <h3 class="card-title">
-                    最新入库统计
-                  </h3>
-                  <div class="card-actions btn-actions">
-                  </div>
-                </div>
-                <div class="col-md-12">
-                  <div class="col-lg-12">
-                    <div class="card-body border-0">
-                      <div id="media_library_statics" style="height: 250%"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!--  最新入库统计结束 -->
           </div>
         </div>
       </div>
@@ -301,9 +424,9 @@
           },
         },
         legend: {
-          data: ["电影", "电视剧", "动漫"],
+          data: ["电视剧", "动漫", "电影"],
           textStyle: {
-            color: "#206bc4",
+	    color: "#888866",
           },
         },
         toolbox: {
@@ -338,6 +461,7 @@
               color: "#FFBF00",
             },
             type: "value",
+            alignTicks: true,
           },
         ],
         series: [
@@ -353,6 +477,10 @@
             data: ret.MovieNums,
             smooth: true,
             color: "#FFBF00",
+            type: "line",
+            areaStyle: {
+              opacity: 0.1
+            }
           },
           {
             name: "电视剧",
@@ -366,6 +494,11 @@
             data: ret.TvNums,
             smooth: true,
             color: "#65ABE7",
+            type: "line",
+            alignTicks: true,
+            areaStyle: {
+              opacity: 0.1
+            }
           },
           {
             name: "动漫",
@@ -379,12 +512,22 @@
             data: ret.AnimeNums,
             smooth: true,
             color: "#444BE7",
+            type: "line",
+            alignTicks: true,
+            areaStyle: {
+              opacity: 0.1
+            }
           },
         ],
       };
       chart_statistics.setOption(option);
     });
   }
+
+  function show_bg_runnings() {
+    $('#modal-show-bg-runnings').modal("show");
+  }
+
   $(document).ready(function () {
     // 响应大小调整
     window.onresize = function () {

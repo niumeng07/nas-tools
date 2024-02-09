@@ -13,6 +13,7 @@ from lxml import etree
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as es
 from selenium.webdriver.support.wait import WebDriverWait
+from apscheduler.triggers.cron import CronTrigger
 
 from app.helper import ChromeHelper, SubmoduleHelper, SiteHelper
 from app.helper.cloudflare_helper import under_challenge
@@ -206,7 +207,6 @@ class InvitesAutoSignIn(_IPluginModule):
 
         # 启动服务
         if self._enabled or self._onlyonce:
-            self.debug(f"开始药丸签到任务")
             # 定时服务
             self._scheduler = BackgroundScheduler(timezone=Config().get_timezone())
 
@@ -230,10 +230,7 @@ class InvitesAutoSignIn(_IPluginModule):
             # 周期运行
             if self._cron:
                 self.info(f"药丸定时签到服务启动，周期：{self._cron}")
-                SchedulerUtils.start_job(scheduler=self._scheduler,
-                                         func=self.signin,
-                                         func_desc="药丸自动签到",
-                                         cron=str(self._cron))
+                self._scheduler.add_job(self.signin, CronTrigger.from_crontab(self._cron), name='药丸自动签到')
 
             # 启动任务
             if self._scheduler.get_jobs():

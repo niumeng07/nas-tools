@@ -2,6 +2,7 @@ import base64
 import datetime
 import importlib
 import inspect
+import pytz
 import json
 import os.path
 import re
@@ -18,8 +19,10 @@ import copy
 import cn2an
 from flask_login import logout_user, current_user
 from werkzeug.security import generate_password_hash
+from datetime import datetime
 
 import log
+from app.utils.commons import time_delta_format
 from app.brushtask import BrushTask
 from app.conf import SystemConfig, ModuleConf
 from app.downloader import Downloader
@@ -234,6 +237,7 @@ class WebAction:
             "install_plugin": self.install_plugin,
             "uninstall_plugin": self.uninstall_plugin,
             "get_plugin_apps": self.get_plugin_apps,
+            "get_runnings": self.get_runnings,
             "get_plugin_page": self.get_plugin_page,
             "get_plugin_state": self.get_plugin_state,
             "get_plugins_conf": self.get_plugins_conf,
@@ -1378,7 +1382,7 @@ class WebAction:
             return {"code": 0}
         elif flag == "locating":
             _sync.check_sync_paths(sid=sid, locating=1 if checked else 0)
-            return {"code": 0}        
+            return {"code": 0}
         else:
             return {"code": 1}
 
@@ -2179,8 +2183,28 @@ class WebAction:
 
         resp = {"code": 0}
 
-        resp.update(
-            {"dataset": SiteUserInfo().get_pt_site_activity_history(data["name"])})
+        resp.update({"dataset": SiteUserInfo().get_pt_site_activity_history(data["name"])})
+        return resp
+
+    @staticmethod
+    def get_running_services():
+        """
+        查询后台任务
+        """
+        jobs = Scheduler().SCHEDULER.get_jobs()
+        resp = []
+        for job in jobs:
+            next_run_time = job.next_run_time.strftime('%Y%m%d %H:%M:%S')
+            next_run_time_diff = time_delta_format(job.next_run_time,
+                                                   datetime.now(tz=pytz.timezone(Config().get_timezone())))
+            resp.append({
+                "id": job.id,
+                 "name": job.name,
+                 "next_run_time": next_run_time,
+                 "state": "运行中",
+                 "next_run_time_diff": next_run_time_diff,
+                 "type": "service"
+            })
         return resp
 
     @staticmethod
@@ -2625,7 +2649,7 @@ class WebAction:
         """
         num = data.get("num") or 12
         # 实测，plex 似乎无法按照数目返回，此处手动切片
-        return { "code": 0, "list": MediaServer().get_resume(num)[0:num] }
+        return {"code": 0, "list": MediaServer().get_resume(num)[0:num]}
 
     @staticmethod
     def __start_mediasync(data):
@@ -3806,7 +3830,7 @@ class WebAction:
         return {"code": 0, "result": [rec.as_dict() for rec in Rss().get_rss_history(rtype=mtype)]}
 
     @staticmethod
-    def get_downloading(data = {}):
+    def get_downloading(data={}):
         """
         查询正在下载的任务
         """
@@ -3815,7 +3839,7 @@ class WebAction:
         MediaHander = Media()
         DownloaderHandler = Downloader()
         torrents = DownloaderHandler.get_downloading_progress(downloader_id=dl_id, force_list=bool(force_list))
-        
+
         for torrent in torrents:
             # 先查询下载记录，没有再识别
             name = torrent.get("name")
@@ -3898,9 +3922,9 @@ class WebAction:
         清空媒体整理历史记录
         """
         if FileTransfer().get_transfer_history_count() < 1:
-            return { "code": 0, "result": True }
+            return {"code": 0, "result": True}
         FileTransfer().truncate_transfer_history_list()
-        return { "code": 0, "result": True }
+        return {"code": 0, "result": True}
 
     @staticmethod
     def get_unknown_list():
@@ -3973,14 +3997,14 @@ class WebAction:
         }
 
     @staticmethod
-    def truncate_transfer_unknown(): 
+    def truncate_transfer_unknown():
         """
         清空媒体手动整理历史记录
         """
         if FileTransfer().get_transfer_unknown_count() < 1:
-            return { "code": 0, "result": True }
+            return {"code": 0, "result": True}
         FileTransfer().truncate_transfer_unknown_list()
-        return { "code": 0, "result": True }
+        return {"code": 0, "result": True}
 
     @staticmethod
     def unidentification():
@@ -4162,11 +4186,15 @@ class WebAction:
                 tv_path = Config().get_config('media').get('tv_path')
                 anime_path = Config().get_config('media').get('anime_path')
                 unknown_path = Config().get_config('media').get('unknown_path')
-                if movie_path is not None: media_dirs.extend([path.rstrip('/') for path in movie_path])
-                if tv_path is not None: media_dirs.extend([path.rstrip('/') for path in tv_path])
-                if anime_path is not None: media_dirs.extend([path.rstrip('/') for path in anime_path])
-                if unknown_path is not None: media_dirs.extend([path.rstrip('/') for path in unknown_path])   
-                dirs = list(set(media_dirs))             
+                if movie_path is not None:
+                    media_dirs.extend([path.rstrip('/') for path in movie_path])
+                if tv_path is not None:
+                    media_dirs.extend([path.rstrip('/') for path in tv_path])
+                if anime_path is not None:
+                    media_dirs.extend([path.rstrip('/') for path in anime_path])
+                if unknown_path is not None:
+                    media_dirs.extend([path.rstrip('/') for path in unknown_path])
+                dirs = list(set(media_dirs))
             else:
                 d = os.path.normpath(unquote(d))
                 if not os.path.isdir(d):
@@ -4219,11 +4247,11 @@ class WebAction:
     def __get_filehardlinks(data):
         """
         获取文件硬链接
-        """            
+        """
         def parse_hardlinks(hardlinks):
             paths = []
             for link in hardlinks:
-                paths.append([SystemUtils.shorten_path(link["file"], 'left', 2), link["file"], link["filepath"]])      
+                paths.append([SystemUtils.shorten_path(link["file"], 'left', 2), link["file"], link["filepath"]])
             return paths
         r = {}
         try:
@@ -4231,7 +4259,7 @@ class WebAction:
             direction = ""
             hardlinks = []
             # 获取所有硬链接的同步目录设置
-            sync_dirs = Sync().get_filehardlinks_sync_dirs()  
+            sync_dirs = Sync().get_filehardlinks_sync_dirs()
             # 按设置遍历检查文件是否在同步目录内，只查找第一个匹配项，多余的忽略
             for dir in sync_dirs:
                 if dir[0] and file.startswith(f"{dir[0]}/"):
@@ -4241,8 +4269,8 @@ class WebAction:
                 elif dir[1] and file.startswith(f"{dir[1]}/"):
                     direction = '←'
                     hardlinks = parse_hardlinks(SystemUtils().find_hardlinks(file=file, fdir=dir[0]))
-                    break     
-            r={
+                    break
+            r = {
                 "filepath": file,  # 文件路径
                 "direction": direction,  # 同步方向
                 "hardlinks": hardlinks  # 同步链接，内容分别为缩略路径、文件路径、目录路径
@@ -4258,12 +4286,12 @@ class WebAction:
             "count": len(r),
             "data": r
         }
-        
+
     @staticmethod
     def __get_dirhardlink(data):
         """
         获取同步目录硬链接
-        """            
+        """
         r = {}
         try:
             path = data.get("dirpath")
@@ -4271,8 +4299,8 @@ class WebAction:
             hardlink = []
             locating = False
             # 获取所有硬链接的同步目录设置
-            sync_dirs = Sync().get_filehardlinks_sync_dirs()    
-            # 按设置遍历检查目录是否是同步目录或在同步目录内             
+            sync_dirs = Sync().get_filehardlinks_sync_dirs()
+            # 按设置遍历检查目录是否是同步目录或在同步目录内
             for dir in sync_dirs:
                 if dir[0] and (dir[0] == path or path.startswith(f"{dir[0]}/")):
                     direction = '→'
@@ -4284,7 +4312,7 @@ class WebAction:
                     hardlink = dir[1].replace(dir[1], dir[0])
                     locating = dir[2]
                     break
-            r={
+            r = {
                 "dirpath": path,  # 同步目录路径
                 "direction": direction,  # 同步方向
                 "hardlink": hardlink,  # 同步链接，内容为配置中对应的目录或子目录
@@ -4301,7 +4329,7 @@ class WebAction:
             "count": len(r),
             "data": r
         }
-        
+
     @staticmethod
     def __rename_file(data):
         """
@@ -5075,7 +5103,7 @@ class WebAction:
         def add_is_default(dl_conf, defualt_id):
             dl_conf["is_default"] = str(dl_conf["id"]) == defualt_id
             return dl_conf
-        
+
         did = data.get("did")
         downloader = Downloader()
         resp = downloader.get_downloader_conf(did=did)
@@ -5261,6 +5289,37 @@ class WebAction:
         plugins = PluginManager().get_plugin_apps(current_user.level)
         statistic = PluginHelper.statistic()
         return {"code": 0, "result": plugins, "statistic": statistic}
+
+    def get_runnings(self):
+        running_plugins = self.get_running_plugins()
+        
+        running_services = self.get_running_services()
+
+        runnings = running_plugins + running_services
+        runnings.sort(key=lambda item: item['next_run_time'])
+        
+        return runnings
+
+    @staticmethod
+    def get_running_plugins():
+        plugins = PluginManager()._running_plugins
+        resp = []
+        for name, plugin in plugins.items():
+            if not plugin.get_state():
+                continue
+            next_run_time, next_run_time_diff = plugin.get_next_run_time()
+            if not next_run_time:
+                continue
+            resp.append({
+                "id": plugin.module_name,
+                "name": plugin.module_name,
+                "next_run_time": next_run_time,
+                "state": '运行中',
+                "next_run_time_diff": next_run_time_diff,
+                "type": "plugin"
+            })
+        return resp
+
 
     @staticmethod
     def get_plugin_page(data):

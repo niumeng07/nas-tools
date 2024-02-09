@@ -36,6 +36,7 @@ from app.media.meta import MetaInfo
 from app.mediaserver import MediaServer
 from app.message import Message
 from app.plugins import EventManager
+from app.scheduler import Scheduler
 from app.rsschecker import RssChecker
 from app.sites import Sites, SiteUserInfo
 from app.subscribe import Subscribe
@@ -288,12 +289,11 @@ def index():
         for index, item in enumerate(AllLibraryModule):
             LibraryManageConf.append({"id": index, "name": item.value, "selected": True})
 
-
     # 继续观看
     Resumes = MediaServer().get_resume()
 
     # 最近添加
-    Latests= MediaServer().get_latest()
+    Latests = MediaServer().get_latest()
 
     return render_template("index.html",
                            ServerSucess=ServerSucess,
@@ -335,12 +335,12 @@ def dashboard():
     # 下载器信息
     DownloaderInfo = Downloader().downloader_statics()
 
-    # 后台任务
+    # 后台任务(含插件)
+    BackgroundRunnings = WebAction().get_runnings()
 
     # 消息统计
 
     # 刮削统计、成功、失败、分类成功、分类失败
-
 
     return render_template("dashboard.html",
                            ServerSucess=ServerSucess,
@@ -349,7 +349,9 @@ def dashboard():
                            LibrarySpaces=LibrarySpaces,
                            MemoryStatics=MemorySpaces,
                            DownloaderInfo=DownloaderInfo,
-                           MediaServerType=MSType
+                           MediaServerType=MSType,
+                           BackgroundRunnings=BackgroundRunnings,
+                           BackgroundJobsCount=len(BackgroundRunnings)
                            )
 
 # 资源搜索页面
@@ -1129,7 +1131,7 @@ def dirlist():
             link_direction = f'<span class="link-direction" data-direction="{direction}">{direction}</span>'
             result = True
         return result, sync_class, link_path, link_direction
-        
+
     def get_hardlink_info(folder):
         """
         获取硬链接信息
@@ -1139,16 +1141,17 @@ def dirlist():
         link_direction = ""
         # 获取所有硬链接的同步目录设置
         sync_dirs = Sync().get_filehardlinks_sync_dirs()
-        # 按设置遍历检查目录是否是同步目录或在同步目录内  
+        # 按设置遍历检查目录是否是同步目录或在同步目录内
         for dir in sync_dirs:
             if dir[0] and (dir[0] == folder or folder.startswith(f"{dir[0]}/")):
                 result, sync_class, link_path, link_direction = match_sync_dir(folder, dir[0], dir[1], dir[2], '→')
-                if result: break
+                if result:
+                    break
             elif dir[1] and (dir[1] == folder or folder.startswith(f"{dir[1]}/")):
                 result, sync_class, link_path, link_direction = match_sync_dir(folder, dir[1], dir[0], dir[2], '←')
-                if result: break
+                if result:
+                    break
         return sync_class, link_path, link_direction
-    
 
     def add_paths_to_media_dirs(paths, media_dirs):
         """
@@ -1160,7 +1163,8 @@ def dirlist():
         if not paths:
             return
 
-        valid_paths = [pathElement.rstrip('/') for pathElement in paths if StringUtils.is_string_and_not_empty(pathElement)]
+        valid_paths = [pathElement.rstrip('/') for pathElement in paths
+                       if StringUtils.is_string_and_not_empty(pathElement)]
         media_dirs.extend(valid_paths)
 
     def get_media_dirs():
@@ -1175,13 +1179,13 @@ def dirlist():
         add_paths_to_media_dirs(movie_path, media_dirs)
         add_paths_to_media_dirs(tv_path, media_dirs)
         add_paths_to_media_dirs(anime_path, media_dirs)
-        add_paths_to_media_dirs(unknown_path, media_dirs)  
+        add_paths_to_media_dirs(unknown_path, media_dirs)
         return list(set(media_dirs))
-    
+
     def get_download_dirs():
         # 获取下载目录
         return [path.rstrip('/') for path in Downloader().get_download_visit_dirs()]
-    
+
     r = ['<ul class="jqueryFileTree" style="display: none;">']
     try:
         r = ['<ul class="jqueryFileTree" style="display: none;">']
@@ -1813,7 +1817,7 @@ def Img():
     if_none_match = request.headers.get('If-None-Match')
     if if_none_match and if_none_match == etag:
         return make_response('', 304)
-    
+
     # 获取图片数据
     try:
       img = WebUtils.request_cache(url)

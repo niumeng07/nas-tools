@@ -12,3 +12,5 @@ nohup.out
 ._*
 *.swp
 .vscode
+config/media.db
+config/user.db
