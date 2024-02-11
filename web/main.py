@@ -252,7 +252,6 @@ def web():
                            img_link=img_link,
                            Commands=Commands)
 
-
 # 开始
 @App.route('/index', methods=['POST', 'GET'])
 @login_required
@@ -803,7 +802,18 @@ def service():
         if not SystemUtils.is_docker() or not SystemUtils.get_all_processes():
             Services.pop('processes')
 
+    indexers = Indexer().get_indexers(check=False)
+    private_count = len([item.id for item in indexers if not item.public])
+    public_count = len([item.id for item in indexers if item.public])
+    indexer_sites = SystemConfig().get(SystemConfigKey.UserIndexerSites)
+
     return render_template("service.html",
+                           Config=Config().get_config(),
+                           PrivateCount=private_count,
+                           PublicCount=public_count,
+                           Indexers=indexers,
+                           IndexerConf=ModuleConf.INDEXER_CONF,
+                           IndexerSites=indexer_sites,
                            Count=len(Services),
                            RuleGroups=RuleGroups,
                            SyncPaths=SyncPaths,
@@ -983,25 +993,6 @@ def download_setting():
                            DefaultDownloadSetting=DefaultDownloadSetting,
                            Downloaders=Downloaders,
                            Count=len(DownloadSetting))
-
-
-# 索引器页面
-@App.route('/indexer', methods=['POST', 'GET'])
-@login_required
-def indexer():
-    # 只有选中的索引器才搜索
-    indexers = Indexer().get_indexers(check=False)
-    private_count = len([item.id for item in indexers if not item.public])
-    public_count = len([item.id for item in indexers if item.public])
-    indexer_sites = SystemConfig().get(SystemConfigKey.UserIndexerSites)
-    return render_template("setting/indexer.html",
-                           Config=Config().get_config(),
-                           PrivateCount=private_count,
-                           PublicCount=public_count,
-                           Indexers=indexers,
-                           IndexerConf=ModuleConf.INDEXER_CONF,
-                           IndexerSites=indexer_sites)
-
 
 # 媒体库页面
 @App.route('/library', methods=['POST', 'GET'])
