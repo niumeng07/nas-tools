@@ -63,7 +63,9 @@ class Qbittorrent(_IDownloadClient):
     def __init__(self, config):
         self._client_config = config
         self.init_config()
-        self.connect()
+        if not self.connect():
+            log.error(f"链接 qBittorrent 出错, 请检查配置, 地址: {self.host}:{self.port}")
+            return
         # 种子自动管理模式，根据下载路径设置为下载器设置分类
         self.init_torrent_management()
         if self.qbc:
@@ -93,6 +95,8 @@ class Qbittorrent(_IDownloadClient):
     def connect(self):
         if self.host and self.port:
             self.qbc = self.__login_qbittorrent()
+            return self.qbc
+        return None
 
     def __login_qbittorrent(self):
         """

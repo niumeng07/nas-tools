@@ -317,10 +317,8 @@ def dashboard():
     # 磁盘空间
     LibrarySpaces = WebAction().get_library_spacesize()
 
-    # CPU利用率
-
-    # 内存利用率
-    MemorySpaces = WebAction().get_memory_statics()
+    # CPU、内存利用率
+    SystemStatics = WebAction().get_system_statics()
 
     # 媒体统计
     MediaCounts = WebAction().get_library_mediacount()
@@ -346,7 +344,7 @@ def dashboard():
                            MediaCount=MediaCounts,
                            UserCount=MediaCounts.get("User"),
                            LibrarySpaces=LibrarySpaces,
-                           MemoryStatics=MemorySpaces,
+                           SystemStatics=SystemStatics,
                            DownloaderInfo=DownloaderInfo,
                            MediaServerType=MSType,
                            BackgroundRunnings=BackgroundRunnings,

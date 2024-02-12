@@ -386,6 +386,11 @@ class SystemUtils:
         return total_memory, available_memory, memory_used_percent
 
     @staticmethod
+    def get_cpu_statics():
+        cpu_percent = psutil.cpu_percent()
+        return cpu_percent
+
+    @staticmethod
     def get_all_processes():
 
         def seconds_to_str(seconds):

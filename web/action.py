@@ -3482,20 +3482,20 @@ class WebAction:
                 TotalSpace = "{:,} GB".format(round(TotalSpace, 2))
 
         return {"code": 0,
-                "UsedPercent": UsedPercent,
+                "SpaceUsedPercent": UsedPercent,
                 "FreeSpace": FreeSpace,
                 "UsedSapce": UsedSapce,
                 "TotalSpace": TotalSpace}
 
     @staticmethod
-    def get_memory_statics():
-        TotalMemory, AvailableMemory, UsedPercent = SystemUtils.get_memory_statics()
+    def get_system_statics():
+        TotalMemory, AvailableMemory, MemoryUsedPercent = SystemUtils.get_memory_statics()
 
         if TotalMemory:
             # 已使用空间
             UsedMemory = TotalMemory - AvailableMemory
             # 百分比格式化
-            UsedPercent = "%0.1f" % ((UsedMemory / TotalMemory) * 100)
+            MemoryUsedPercent = "%0.1f" % ((UsedMemory / TotalMemory) * 100)
             # 总剩余空间 格式化
             if AvailableMemory > 1024:
                 AvailableMemory = "{:,} TB".format(round(AvailableMemory / 1024, 2))
@@ -3512,11 +3512,13 @@ class WebAction:
             else:
                 TotalMemory = "{:,} GB".format(round(TotalMemory, 2))
 
+        CpuUsedPercent = SystemUtils.get_cpu_statics()
         return {
             "code": 0,
-            "UsedPercent": UsedPercent,
+            "MemoryUsedPercent": MemoryUsedPercent,
             "AvaiableMemory": AvailableMemory,
-            "TotalMemory": TotalMemory
+            "TotalMemory": TotalMemory,
+            "CpuUsedPercent": CpuUsedPercent
         }
 
     @staticmethod

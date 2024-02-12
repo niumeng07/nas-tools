@@ -40,7 +40,9 @@ class Transmission(_IDownloadClient):
     def __init__(self, config):
         self._client_config = config
         self.init_config()
-        self.connect()
+        if not self.connect():
+            log.error(f"链接 Transmission 出错, 请检查配置, 地址: {self.host}:{self.port}")
+            return
         # 设置未完成种子添加!part后缀
         self.trc.set_session(rename_partial_files=True)
 
@@ -63,6 +65,8 @@ class Transmission(_IDownloadClient):
     def connect(self):
         if self.host and self.port:
             self.trc = self.__login_transmission()
+            return self.trc
+        return None
 
     def downloader_statics(self):
         if not self.trc:
