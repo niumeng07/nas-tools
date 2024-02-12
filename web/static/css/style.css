@@ -15,7 +15,7 @@ body, .page {
 }
 
 .theme-light .navbar, .theme-light .alert:not(.alert-important), .theme-light .card, .theme-light .card-footer, .theme-light .card-stacked::after, .theme-light .footer:not(.footer-transparent), .theme-light .modal-content, .theme-light .modal-header, .theme-light .toast, .theme-light .toast-header {
-    background-color: rgba(231, 235, 239, 0.7)!important;
+    background-color: rgba(231, 235, 239, 0.9)!important;
 }
 
 .theme-light .dropdown-menu {
@@ -493,6 +493,10 @@ LI.directory a.selected {
     opacity: 1;
     box-shadow: 0 0 0 1px #bbbbbb inset;
     background-image: linear-gradient(45deg, #bbbbbd, #8597aa 60%);
+}
+
+.grid-larger-card {
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
 }
 
 .grid-normal-card {

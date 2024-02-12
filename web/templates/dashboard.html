@@ -74,7 +74,7 @@
               </div>
             </div>
             <div class="card-progress" style="overflow: hidden">
-              <div class="progress-bar bg-green" style="width:{{ SystemStatics.CpuUsedPercent  }}%" role="progressbar"
+              <div class="progress-bar bg-purple" style="width:{{ SystemStatics.CpuUsedPercent  }}%" role="progressbar"
                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
               </div>
             </div>
@@ -220,7 +220,7 @@
                   <h3 class="card-title">后台任务</h3>
                   <div class="ms-auto">
                     <a href="javascript:show_bg_runnings()" class="btn-icon">
-                      {{ SVG.list_details() }}
+                      {{ SVG.details() }}
                     </a>
                   </div>
                   <div class="ms-3 text-muted">
@@ -233,17 +233,17 @@
                       {% if BackgroundJobsCount > 0 %}
                       {% for item in BackgroundRunnings[0:5] %}
                       <tr>
-                        <td class="sort-name">
+                        <td class="sort-name" style="border:none">
                           <div class="d-flex py-1 align-items-center">
                             <small>{{ item.name }}</small>
                           </div>
                         </td>
-                        <td class="sort-data">
+                        <td class="sort-data" style="border:none">
                           <div class="flex-fill">
                             <small>{{ item.next_run_time_diff }}</small>
                           </div>
                         </td>
-                        <td class="sort-type">
+                        <td class="sort-type" style="border:none">
                           <div class="flex-fill">
                             {% if item.type == 'service' %}
                             <span class="badge text-white bg-blue mb-1">
@@ -260,7 +260,7 @@
                       {% endfor %}
                       {% else %}
                       <tr>
-                        <td colspan="8" align="center">没有任务</td>
+                        <td colspan="8" align="center" style="border:none">没有任务</td>
                       </tr>
                       {% endif %}
                     </tbody>
@@ -304,7 +304,7 @@
                     </div>
                     <div class="card-body border-0">
                       <div class="row align-items-center">
-                        <div class="col-auto bg-indigo avatar text-white">{{ SVG.downloader_dlrate() }}</div>
+                        <div class="col-auto bg-indigo avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader">下载速度</div>
                           <div class="me-auto">
@@ -325,7 +325,7 @@
                     </div>
                     <div class="card-body border-0">
                       <div class="row align-items-center">
-                        <div class="col-auto bg-purple avatar text-white">{{ SVG.downloader_uprate() }}</div>
+                        <div class="col-auto bg-purple avatar text-white">{{ SVG.arrow_big_up_lines() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader">上传速度</div>
                           <div class="me-auto">
@@ -364,8 +364,8 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div id="table-background-tasks" class="table-responsive">
-              <table class="table table-vcenter card-table table-hover" style="height: 88px">
+            <div id="table-background-tasks" class="table-responsive" style="height: 600px">
+              <table class="table table-vcenter card-table table-hover">
                 <tbody class="table-tbody">
                   {% if BackgroundJobsCount > 0 %}
                   {% for item in BackgroundRunnings %}

@@ -53,7 +53,7 @@
 {% if item['name'] == '我的媒体库' and item['selected'] %}
 <div class="page-body">
   <div class="container-xl">
-    <div class="d-grid gap-3 grid-normal-card">
+    <div class="d-grid gap-3 grid-larger-card">
       {% for Library in Librarys %}
         {% if LibrarySyncConf and Library.id|string in LibrarySyncConf %}
         {% set theLibLink = Library.link %}
