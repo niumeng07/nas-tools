@@ -8,6 +8,7 @@ import log
 from app.helper import MetaHelper
 from app.mediaserver import MediaServer
 from app.rss import Rss
+from app.monitor import Monitor
 from app.sites import SiteUserInfo
 from app.subscribe import Subscribe
 from app.sync import Sync
@@ -26,12 +27,14 @@ class Scheduler:
     _pt = None
     _douban = None
     _media = None
+    _monitor = None
 
     def __init__(self):
         self.init_config()
 
     def init_config(self):
         self._pt = Config().get_config('pt')
+        self._monitor = Config().get_config('monitor')
         self._media = Config().get_config('media')
         self.stop_service()
         self.run_service()
@@ -46,6 +49,22 @@ class Scheduler:
         })
         if not self.SCHEDULER:
             return
+        if self._monitor:
+            monitor_check_interval = self._monitor.get('monitor_check_interval', 600)
+            if monitor_check_interval:
+                if isinstance(monitor_check_interval, str) and monitor_check_interval.isdigit():
+                    monitor_check_interval = int(monitor_check_interval)
+                else:
+                    try:
+                        monitor_check_interval = round(float(monitor_check_interval))
+                    except Exception as e:
+                        log.error("监控周期配置格式错误：%s" % str(e))
+                        pt_check_interval = 600
+                if monitor_check_interval and int(monitor_check_interval) < 60:
+                    monitor_check_interval = 600
+                self.SCHEDULER.add_job(Monitor().monitor, 'interval', name='后台监控', seconds=monitor_check_interval)
+                log.error("后台监控服务启动")
+
         if self._pt:
             # 数据统计
             ptrefresh_date_cron = self._pt.get('ptrefresh_date_cron')

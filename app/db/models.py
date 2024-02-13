@@ -592,3 +592,23 @@ class MEDIASYNCSTATISTIC(BaseMedia):
     MOVIE_COUNT = Column(Text)
     TV_COUNT = Column(Text)
     UPDATE_TIME = Column(Text)
+
+class MONITORHISTORY(Base):
+    __tablename__ = 'MONITOR_HISTORY'
+
+    ID = Column(Integer, Sequence('ID'), primary_key=True)
+    DATE = Column(Text)
+    TIME = Column(Text)
+    MEMORYPERCENT = Column(Float)
+    CPUPERCENT = Column(Float)
+    SPACEPERCENT = Column(Float)
+    FINISH_TIME = Column(Text)
+    MEMORYAVAIABLE = Column(Text)
+    MEMORYTOTAL = Column(Text)
+    SPACEPFREE = Column(Text)
+    SPACEPUSED = Column(Text)
+    SPACETOTAL = Column(Text)
+
+    def as_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+

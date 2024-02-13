@@ -44,6 +44,7 @@ from app.searcher import Searcher
 from app.sites import Sites, SiteUserInfo, SiteCookie, SiteConf
 from app.subscribe import Subscribe
 from app.sync import Sync
+from app.monitor import Monitor
 from app.torrentremover import TorrentRemover
 from app.utils import StringUtils, EpisodeFormat, RequestUtils, PathUtils, \
     SystemUtils, ExceptionUtils, Torrent
@@ -162,7 +163,10 @@ class WebAction:
             "share_filtergroup": self.__share_filtergroup,
             "import_filtergroup": self.__import_filtergroup,
             "get_transfer_statistics": self.get_transfer_statistics,
+            "get_history_cpu_statics": self.get_history_cpu_statics,
+            "get_history_memory_statics": self.get_history_memory_statics,
             "get_library_spacesize": self.get_library_spacesize,
+            "system_monitor_current": self.system_monitor_current,
             "get_library_mediacount": self.get_library_mediacount,
             "get_library_playhistory": self.get_library_playhistory,
             "get_search_result": self.get_search_result,
@@ -522,6 +526,7 @@ class WebAction:
             "sync": Sync().transfer_sync,
             "rssdownload": Rss().rssdownload,
             "subscribe_search_all": Subscribe().subscribe_search_all,
+            "monitor": Monitor().monitor(),
         }
         sch_item = data.get("item")
         if sch_item and commands.get(sch_item):
@@ -3442,84 +3447,29 @@ class WebAction:
         """
         查询媒体库存储空间
         """
-        # 磁盘空间
-        UsedSapce = 0
-        UsedPercent = 0
-        media = Config().get_config('media')
-        # 电影目录
-        movie_paths = media.get('movie_path')
-        if not isinstance(movie_paths, list):
-            movie_paths = [movie_paths]
-        # 电视目录
-        tv_paths = media.get('tv_path')
-        if not isinstance(tv_paths, list):
-            tv_paths = [tv_paths]
-        # 动漫目录
-        anime_paths = media.get('anime_path')
-        if not isinstance(anime_paths, list):
-            anime_paths = [anime_paths]
-        # 总空间、剩余空间
-        TotalSpace, FreeSpace = SystemUtils.get_space_statics(movie_paths + tv_paths + anime_paths)
-        if TotalSpace:
-            # 已使用空间
-            UsedSapce = TotalSpace - FreeSpace
-            # 百分比格式化
-            UsedPercent = "%0.1f" % ((UsedSapce / TotalSpace) * 100)
-            # 总剩余空间 格式化
-            if FreeSpace > 1024:
-                FreeSpace = "{:,} TB".format(round(FreeSpace / 1024, 2))
-            else:
-                FreeSpace = "{:,} GB".format(round(FreeSpace, 2))
-            # 总使用空间 格式化
-            if UsedSapce > 1024:
-                UsedSapce = "{:,} TB".format(round(UsedSapce / 1024, 2))
-            else:
-                UsedSapce = "{:,} GB".format(round(UsedSapce, 2))
-            # 总空间 格式化
-            if TotalSpace > 1024:
-                TotalSpace = "{:,} TB".format(round(TotalSpace / 1024, 2))
-            else:
-                TotalSpace = "{:,} GB".format(round(TotalSpace, 2))
-
-        return {"code": 0,
-                "SpaceUsedPercent": UsedPercent,
-                "FreeSpace": FreeSpace,
-                "UsedSapce": UsedSapce,
-                "TotalSpace": TotalSpace}
+        return Monitor().get_current_library_spacesize()
 
     @staticmethod
-    def get_system_statics():
-        TotalMemory, AvailableMemory, MemoryUsedPercent = SystemUtils.get_memory_statics()
+    def system_monitor_current():
+        SpacesStatics = Monitor().get_current_library_spacesize()
+        SystemStatics = Monitor().get_current_system_statics()
+        SpacesStatics.update(SystemStatics)
+        return SpacesStatics
 
-        if TotalMemory:
-            # 已使用空间
-            UsedMemory = TotalMemory - AvailableMemory
-            # 百分比格式化
-            MemoryUsedPercent = "%0.1f" % ((UsedMemory / TotalMemory) * 100)
-            # 总剩余空间 格式化
-            if AvailableMemory > 1024:
-                AvailableMemory = "{:,} TB".format(round(AvailableMemory / 1024, 2))
-            else:
-                AvailableMemory = "{:,} GB".format(round(AvailableMemory, 2))
-            # 总使用空间 格式化
-            if UsedMemory > 1024:
-                UsedMemory = "{:,} TB".format(round(UsedMemory / 1024, 2))
-            else:
-                UsedMemory = "{:,} GB".format(round(UsedMemory, 2))
-            # 总空间 格式化
-            if TotalMemory > 1024:
-                TotalMemory = "{:,} TB".format(round(TotalMemory / 1024, 2))
-            else:
-                TotalMemory = "{:,} GB".format(round(TotalMemory, 2))
+    @staticmethod
+    def get_history_memory_statics():
+        monitor_history = Monitor().get_monitor_history()
+        statics = monitor_history['MemoryUsedPercent']
+        memory_statics = {"Statics": statics}
+        return memory_statics
 
-        CpuUsedPercent = SystemUtils.get_cpu_statics()
-        return {
-            "code": 0,
-            "MemoryUsedPercent": MemoryUsedPercent,
-            "AvaiableMemory": AvailableMemory,
-            "TotalMemory": TotalMemory,
-            "CpuUsedPercent": CpuUsedPercent
-        }
+    @staticmethod
+    def get_history_cpu_statics():
+        monitor_history = Monitor().get_monitor_history()
+        statics = monitor_history['CpuUsedPercent']
+        cpu_statics = {"Statics": statics}
+        return cpu_statics
+
 
     @staticmethod
     def get_transfer_statistics():

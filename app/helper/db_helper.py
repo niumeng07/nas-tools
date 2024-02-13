@@ -2707,3 +2707,26 @@ class DbHelper:
         """
         self._db.query(PLUGINHISTORY).filter(PLUGINHISTORY.PLUGIN_ID == plugin_id,
                                              PLUGINHISTORY.KEY == key).delete()
+    @DbPersist(_db)
+    def delete_monitor_history(self, monitorid):
+        """
+        删除监控历史
+        """
+        if not monitorid:
+            return
+        self._db.query(MONITORHISTORY).filter(MONITORHISTORY.ID == int(monitorid)).delete()
+
+
+    def get_monitor_history(self, monitorid=None, recent_days=3):
+        """
+        查询监控历史
+        默认返回近3天监控信息
+        """
+        if monitorid:
+            return self._db.query(MONITORHISTORY).filter(MONITORHISTORY.ID == int(monitorid)).all()
+
+        start_date = (datetime.datetime.now()-datetime.timedelta(days=recent_days)).strftime('%Y%m%d')
+        return self._db.query(MONITORHISTORY) \
+            .filter(MONITORHISTORY.DATE > start_date) \
+            .order_by(MONITORHISTORY.FINISH_TIME.asc()) \
+            .all()

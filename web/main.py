@@ -314,11 +314,8 @@ def dashboard():
     # 媒体服务器类型
     MSType = Config().get_config('media').get('media_server')
 
-    # 磁盘空间
-    LibrarySpaces = WebAction().get_library_spacesize()
-
     # CPU、内存利用率
-    SystemStatics = WebAction().get_system_statics()
+    SystemStatics = WebAction().system_monitor_current()
 
     # 媒体统计
     MediaCounts = WebAction().get_library_mediacount()
@@ -326,8 +323,6 @@ def dashboard():
         ServerSucess = True
     else:
         ServerSucess = False
-
-    # 最新入库统计
 
     # 下载器信息
     DownloaderInfo = Downloader().downloader_statics()
@@ -343,7 +338,6 @@ def dashboard():
                            ServerSucess=ServerSucess,
                            MediaCount=MediaCounts,
                            UserCount=MediaCounts.get("User"),
-                           LibrarySpaces=LibrarySpaces,
                            SystemStatics=SystemStatics,
                            DownloaderInfo=DownloaderInfo,
                            MediaServerType=MSType,
@@ -742,6 +736,7 @@ def service():
     # 所有服务
     Services = current_user.get_services()
     pt = Config().get_config('pt')
+    monitor = Config().get_config('monitor')
     # RSS订阅
     if "rssdownload" in Services:
         pt_check_interval = pt.get('pt_check_interval')
@@ -800,6 +795,21 @@ def service():
         if not SystemUtils.is_docker() or not SystemUtils.get_all_processes():
             Services.pop('processes')
 
+    # 后台监控
+    if "monitor" in Services:
+        monitor_check_interval = monitor.get('monitor_check_interval', 600)
+        if str(monitor_check_interval).isdigit():
+            time_monitor = str(round(int(monitor_check_interval) / 60)) + " 分钟"
+            monitor_state = 'ON'
+        else:
+            time_monitor = ""
+            monitor_state = 'OFF'
+        Services['monitor'].update({
+            'time': time_monitor,
+            'state': monitor_state,
+        })
+
+    # 内置索引器
     indexers = Indexer().get_indexers(check=False)
     private_count = len([item.id for item in indexers if not item.public])
     public_count = len([item.id for item in indexers if item.public])

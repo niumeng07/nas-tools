@@ -16,9 +16,9 @@
                   <div class="d-flex align-items-center subheader">存储空间</div>
                   <div class="me-auto">
                     <div>
-                      <div class="h1 mb-0 me-2" style="float:left">{{ LibrarySpaces.TotalSpace }} </div>
+                      <div class="h1 mb-0 me-2" style="float:left">{{ SystemStatics.TotalSpace }} </div>
                       <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
-                        LibrarySpaces.SpaceUsedPercent }}% </div>
+                        SystemStatics.SpaceUsedPercent }}% </div>
                     </div>
                     <div style="clear:both"></div>
                   </div>
@@ -26,7 +26,7 @@
               </div>
             </div>
             <div class="card-progress" style="overflow: hidden">
-              <div class="progress-bar bg-blue" style="width:{{ LibrarySpaces.SpaceUsedPercent }}%" role="progressbar"
+              <div class="progress-bar bg-blue" style="width:{{ SystemStatics.SpaceUsedPercent }}%" role="progressbar"
                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
               </div>
             </div>
@@ -74,7 +74,7 @@
               </div>
             </div>
             <div class="card-progress" style="overflow: hidden">
-              <div class="progress-bar bg-purple" style="width:{{ SystemStatics.CpuUsedPercent  }}%" role="progressbar"
+              <div class="progress-bar bg-purple" style="width:{{ SystemStatics.CpuUsedPercent }}%" role="progressbar"
                 aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
               </div>
             </div>
@@ -193,7 +193,7 @@
                 <div class="col-md-12">
                   <div class="col-lg-12">
                     <div class="card-body border-0">
-                      <div id="media_library_statics" style="height: 244%"></div>
+                      <div id="media_library_statics" style="height: 220px"></div>
                     </div>
                   </div>
                 </div>
@@ -207,13 +207,28 @@
   </div>
   {% endif %}
 
-  <!-- 后台任务监控 -->
   {% if ServerSucess %}
   <div class="page-body">
     <div class="container-xl">
       <div class="modal-body py-0">
         <div class="col-md-12">
-          <div class="row align-items-center row-eq-height" , style="position: relative">
+          <div class="row align-items-center row-eq-height" style="position: relative">
+            <!-- CPU曲线,内存曲线 -->
+            <div class="col-lg-4">
+              <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
+                <div class="card-header" style="line-height: 0px">
+                  <h3 class="card-title">资源监控</h3>
+                </div>
+                <div class="card-body border-0" style="height: 110px">
+                  <div id="cpu_history_statics" style="height: 110px"></div>
+                </div>
+                <div style="height: 10px"></div>
+                <div class="card-body border-0" style="height: 110px">
+                  <div id="memory_history_statics" style="height: 110px"></div>
+                </div>
+              </div>
+            </div>
+            <!-- 后台任务监控 -->
             <div class="col-lg-4">
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
                 <div class="card-header">
@@ -268,7 +283,6 @@
                 </div>
               </div>
             </div>
-            {% for Name, Info in DownloaderInfo.items() %}
             <!--单个下载器信息-->
             <div class="col-lg-4">
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
@@ -276,80 +290,59 @@
                   <h3 class="card-title">
                     下载器信息
                   </h3>
-                  <div class="card-actions btn-actions">
-                    <span class="text-muted d-inline-flex align-items-center lh-1">
-                      <a href="http://{{ Info.host }}:{{ Info.port }}" style="color: green">{{ Name }}</a>
-                    </span>
-                  </div>
                 </div>
                 <div class="card-body border-0">
                   <dl class="row row-eq-height">
+                    {% for Name, Info in DownloaderInfo.items() %}
                     <div class="card-body border-0">
                       <div class="row align-items-center">
                         {% if Name == "qBitTorrent" %}
-                        <div class="col-auto bg-blue avatar text-white">{{ SVG.qbittorrent() }}</div>
+                        <div class="col-auto bg-blue avatar text-white">
+                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
+                            {{ SVG.qbittorrent() }}
+                          </a>
+                        </div>
                         {% else %}
-                        <div class="col-auto bg-cyan avatar text-white">{{ SVG.transmission() }}</div>
+                        <div class="col-auto bg-red avatar text-white">
+                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
+                            {{ SVG.transmission() }}
+                          </a>
+                        </div>
                         {% endif %}
                         <div class="col">
-                          <div class="d-flex align-items-center subheader">种子数</div>
-                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}</div>
+                          <div class="h5 mb-0 me-2 d-flex align-items-center subheader">种子数</div>
+                          <div class="h5 mb-0 me-2 d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}</div>
+                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
+                            <div class="h5 mb-0 me-2 text-blue d-inline-flex lh-1" style="float:left white-space:nowrap">打开</div>
+			  </a>
                         </div>
-                      </div>
-                    </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100">
-                      </div>
-                    </div>
-                    <div class="card-body border-0">
-                      <div class="row align-items-center">
                         <div class="col-auto bg-indigo avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
                         <div class="col">
-                          <div class="d-flex align-items-center subheader">下载速度</div>
+                          <div class="d-flex align-items-center subheader white-space:nowrap">下载速度</div>
                           <div class="me-auto">
-                            <div>
-                              <div class="h1 mb-0 me-2" style="float:left">{{ Info.download_speed }} </div>
-                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
-                                Info.download_rate_limit }}</div>
-                            </div>
-                            <div style="clear:both"></div>
+                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }} </div>
+                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">{{
+                              Info.download_rate_limit }}</div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100">
-                      </div>
-                    </div>
-                    <div class="card-body border-0">
-                      <div class="row align-items-center">
                         <div class="col-auto bg-purple avatar text-white">{{ SVG.arrow_big_up_lines() }}</div>
                         <div class="col">
-                          <div class="d-flex align-items-center subheader">上传速度</div>
+                          <div class="d-flex align-items-center subheader" style="white-space:nowrap">上传速度</div>
                           <div class="me-auto">
-                            <div>
-                              <div class="h1 mb-0 me-2" style="float:left">{{ Info.upload_speed }} </div>
-                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
-                                Info.upload_rate_limit }}</div>
-                            </div>
+                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }} </div>
+                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">{{
+                              Info.upload_rate_limit }}</div>
                             <div style="clear:both"></div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    <div class="card-progress" style="overflow: hidden">
-                      <div class="progress-bar bg-green" style="width: 0%" role="progressbar" aria-valuenow="0"
-                        aria-valuemin="0" aria-valuemax="100">
-                      </div>
-                    </div>
+                    {% endfor %}
                   </dl>
                 </div>
               </div>
             </div>
             <!--单个下载器信息-->
-            {% endfor %}
           </div>
         </div>
       </div>
@@ -415,7 +408,7 @@
   media_library_statics();
   function media_library_statics(e) {
     ajax_post("get_transfer_statistics", {}, function (ret) {
-      chart_statistics = echarts.init(
+      chart_media_stats = echarts.init(
         document.getElementById("media_library_statics"),
         null,
         {
@@ -534,20 +527,137 @@
           },
         ],
       };
-      chart_statistics.setOption(option);
+      chart_media_stats.setOption(option);
     });
   }
+
+</script>
+
+<script type="text/javascript">
+  func_system_statics("get_history_cpu_statics", "cpu_history_statics", "CPU %", "#E9A139");
+  func_system_statics("get_history_memory_statics", "memory_history_statics", "内存 %", "#AFABFF");
+  chart_sys_stats = new Map([])
+  function func_system_statics(funcName, divName, legendName, colorName) {
+    ajax_post(funcName, {}, function (ret) {
+      chart_i = echarts.init(
+        document.getElementById(divName),
+        null,
+        {
+          renderer: "canvas",
+          useDirtyRect: false,
+        }
+      );
+      const option = {
+        title: {
+          text: "",
+        },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: {
+            type: "cross",
+            label: {
+              backgroundColor: "#6a7985",
+            },
+          },
+        },
+        legend: {
+          textStyle: {
+            color: "#888866",
+          },
+        },
+        toolbox: {
+          feature: {},
+        },
+        grid: {
+          left: '0%',   //距左边边框的距离
+          right: '0%',  //距右边边框的距离
+          bottom: '0%',//距下面边框的距离
+          top: '30%',    //距上面边框的距离
+          containLabel: true,
+        },
+        xAxis: [
+          {
+            data: {
+              formatter: function () {
+                return "";
+              }
+            },
+            splitLine: {
+              show: false,
+            },
+            axisLine: {
+              show: false,
+            },
+            axisTick: {
+              show: false,
+            },
+            type: 'category',
+            boundaryGap: false,
+          }
+        ],
+        yAxis: [
+          {
+            type: "value",
+            min: -10,
+            max: 100,
+            axisLabel: {  // 隐藏y轴数字
+              formatter: function () {
+                return "";
+              }
+            },
+            dispaly: "none",
+            axisLine: {
+              show: false,
+            },
+            axisTick: {
+              show: false,
+            },
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: [1, 6],
+                dashOffset: 1
+              }
+            },
+            show: true,
+          }
+        ],
+        series: [
+          {
+            data: ret.Statics,
+            name: legendName,
+            smooth: true,
+            color: colorName,
+            type: "line",
+            areaStyle: {
+              opacity: 0.0
+            }
+          },
+        ],
+      };
+
+      chart_i.setOption(option);
+      chart_sys_stats.set(legendName, chart_i);
+    });
+  }
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function () {
+    // 响应大小调整
+    window.onresize = function () {
+      if (chart_sys_stats) {
+        chart_sys_stats.forEach (function(value, key) {
+	  value.resize();
+        })
+      }
+      if (chart_media_stats) {
+        chart_media_stats.resize();
+      }
+    };
+  });
 
   function show_bg_runnings() {
     $('#modal-show-bg-runnings').modal("show");
   }
-
-  $(document).ready(function () {
-    // 响应大小调整
-    window.onresize = function () {
-      if (chart_statistics) {
-        chart_statistics.resize();
-      }
-    };
-  });
 </script>

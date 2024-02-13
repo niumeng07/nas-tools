@@ -375,7 +375,7 @@ class SystemUtils:
 
 
     @staticmethod
-    def get_memory_statics():
+    def get_current_memory_statics():
         memory_stats = psutil.virtual_memory()
         total_memory = memory_stats.total
         available_memory = memory_stats.available
@@ -386,7 +386,7 @@ class SystemUtils:
         return total_memory, available_memory, memory_used_percent
 
     @staticmethod
-    def get_cpu_statics():
+    def get_current_cpu_statics():
         cpu_percent = psutil.cpu_percent()
         return cpu_percent
 
