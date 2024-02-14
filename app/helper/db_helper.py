@@ -2717,7 +2717,7 @@ class DbHelper:
         self._db.query(MONITORHISTORY).filter(MONITORHISTORY.ID == int(monitorid)).delete()
 
 
-    def get_monitor_history(self, monitorid=None, recent_days=3):
+    def get_monitor_history(self, monitorid=None, recent_days=2):
         """
         查询监控历史
         默认返回近3天监控信息

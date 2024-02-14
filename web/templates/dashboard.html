@@ -218,6 +218,11 @@
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
                 <div class="card-header" style="line-height: 0px">
                   <h3 class="card-title">资源监控</h3>
+                  <div class="ms-auto">
+                    <a href="javascript:refresh_sys_monitor()" class="btn-icon">
+                      {{ SVG.refresh() }}
+                    </a>
+                  </div>
                 </div>
                 <div class="card-body border-0" style="height: 110px">
                   <div id="cpu_history_statics" style="height: 110px"></div>
@@ -255,7 +260,7 @@
                         </td>
                         <td class="sort-data" style="border:none">
                           <div class="flex-fill">
-                            <small>{{ item.next_run_time_diff }}</small>
+                            <small>{{ item.delta_time }}</small>
                           </div>
                         </td>
                         <td class="sort-type" style="border:none">
@@ -311,17 +316,21 @@
                         {% endif %}
                         <div class="col">
                           <div class="h5 mb-0 me-2 d-flex align-items-center subheader">种子数</div>
-                          <div class="h5 mb-0 me-2 d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}</div>
+                          <div class="h5 mb-0 me-2 d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}
+                          </div>
                           <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                            <div class="h5 mb-0 me-2 text-blue d-inline-flex lh-1" style="float:left white-space:nowrap">打开</div>
-			  </a>
+                            <div class="h5 mb-0 me-2 text-blue d-inline-flex lh-1"
+                              style="float:left white-space:nowrap">打开</div>
+                          </a>
                         </div>
                         <div class="col-auto bg-indigo avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader white-space:nowrap">下载速度</div>
                           <div class="me-auto">
-                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }} </div>
-                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">{{
+                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }}
+                            </div>
+                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1"
+                              style="float:left white-space:nowrap">{{
                               Info.download_rate_limit }}</div>
                           </div>
                         </div>
@@ -329,8 +338,10 @@
                         <div class="col">
                           <div class="d-flex align-items-center subheader" style="white-space:nowrap">上传速度</div>
                           <div class="me-auto">
-                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }} </div>
-                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">{{
+                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }}
+                            </div>
+                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1"
+                              style="float:left white-space:nowrap">{{
                               Info.upload_rate_limit }}</div>
                             <div style="clear:both"></div>
                           </div>
@@ -370,7 +381,7 @@
                     </td>
                     <td class="sort-data">
                       <div class="flex-fill">
-                        <small>{{ item.next_run_time_diff }}</small>
+                        <small>{{ item.delta_time }}</small>
                       </div>
                     </td>
                     <td class="sort-type">
@@ -460,6 +471,14 @@
               color: "#65ABE7",
             },
             type: "value",
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: [1, 10],
+                dashOffset: 3
+              }
+            },
+            show: true,
           },
           {
             name: "电影",
@@ -469,6 +488,14 @@
             },
             type: "value",
             alignTicks: true,
+            splitLine: {
+              show: true,
+              lineStyle: {
+                type: [1, 10],
+                dashOffset: 3
+              }
+            },
+            show: true,
           },
         ],
         series: [
@@ -615,7 +642,7 @@
             splitLine: {
               show: true,
               lineStyle: {
-                type: [1, 6],
+                type: [1, 10],
                 dashOffset: 1
               }
             },
@@ -647,8 +674,8 @@
     // 响应大小调整
     window.onresize = function () {
       if (chart_sys_stats) {
-        chart_sys_stats.forEach (function(value, key) {
-	  value.resize();
+        chart_sys_stats.forEach(function (value, key) {
+          value.resize();
         })
       }
       if (chart_media_stats) {
@@ -659,5 +686,12 @@
 
   function show_bg_runnings() {
     $('#modal-show-bg-runnings').modal("show");
+  }
+</script>
+
+<script type="text/javascript">
+  function refresh_sys_monitor() {
+    func_system_statics("get_history_cpu_statics", "cpu_history_statics", "CPU %", "#E9A139");
+    func_system_statics("get_history_memory_statics", "memory_history_statics", "内存 %", "#AFABFF");
   }
 </script>

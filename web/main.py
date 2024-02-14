@@ -328,7 +328,7 @@ def dashboard():
     DownloaderInfo = Downloader().downloader_statics()
 
     # 后台任务(含插件)
-    BackgroundRunnings = WebAction().get_runnings()
+    BackgroundRunnings = WebAction().get_running_services()
 
     # 消息统计
 

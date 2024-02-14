@@ -30,7 +30,7 @@ def singleton(cls):
     return _singleton
 
 
-def time_delta_format(time1, time2):
+def deltatime2str(time1, time2):
     time_delta = time1 - time2
     delta_days = time_delta.days
     delta_seconds = time_delta.seconds

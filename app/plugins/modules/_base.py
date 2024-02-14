@@ -10,7 +10,7 @@ import log
 from app.conf import SystemConfig
 from app.helper import DbHelper
 from app.message import Message
-from app.utils.commons import time_delta_format
+from app.utils.commons import deltatime2str
 from config import Config
 
 
@@ -62,7 +62,7 @@ class _IPluginModule(metaclass=ABCMeta):
 
     _cron = None
     next_run_time = None
-    next_run_time_diff = None
+    delta_time = None
 
     def get_next_run_time(self):
         """
@@ -74,10 +74,10 @@ class _IPluginModule(metaclass=ABCMeta):
         trigger = CronTrigger.from_crontab(self._cron)
         tz = pytz.timezone(Config().get_timezone())
         next_run_time = trigger.get_next_fire_time(datetime.now(tz=tz), datetime.now(tz=tz))
-        next_run_time_diff = time_delta_format(next_run_time,
+        delta_time = deltatime2str(next_run_time,
                                                datetime.now(tz=tz))
         next_run_time = next_run_time.strftime('%Y%m%d %H:%M:%S')
-        return next_run_time, next_run_time_diff
+        return next_run_time, delta_time
 
     @staticmethod
     @abstractmethod

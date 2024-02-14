@@ -22,7 +22,7 @@ from werkzeug.security import generate_password_hash
 from datetime import datetime
 
 import log
-from app.utils.commons import time_delta_format
+from app.utils.commons import deltatime2str
 from app.brushtask import BrushTask
 from app.conf import SystemConfig, ModuleConf
 from app.downloader import Downloader
@@ -241,7 +241,7 @@ class WebAction:
             "install_plugin": self.install_plugin,
             "uninstall_plugin": self.uninstall_plugin,
             "get_plugin_apps": self.get_plugin_apps,
-            "get_runnings": self.get_runnings,
+            "get_running_services": self.get_running_services,
             "get_plugin_page": self.get_plugin_page,
             "get_plugin_state": self.get_plugin_state,
             "get_plugins_conf": self.get_plugins_conf,
@@ -2189,27 +2189,6 @@ class WebAction:
         resp = {"code": 0}
 
         resp.update({"dataset": SiteUserInfo().get_pt_site_activity_history(data["name"])})
-        return resp
-
-    @staticmethod
-    def get_running_services():
-        """
-        查询后台任务
-        """
-        jobs = Scheduler().SCHEDULER.get_jobs()
-        resp = []
-        for job in jobs:
-            next_run_time = job.next_run_time.strftime('%Y%m%d %H:%M:%S')
-            next_run_time_diff = time_delta_format(job.next_run_time,
-                                                   datetime.now(tz=pytz.timezone(Config().get_timezone())))
-            resp.append({
-                "id": job.id,
-                 "name": job.name,
-                 "next_run_time": next_run_time,
-                 "state": "运行中",
-                 "next_run_time_diff": next_run_time_diff,
-                 "type": "service"
-            })
         return resp
 
     @staticmethod
@@ -5242,34 +5221,28 @@ class WebAction:
         statistic = PluginHelper.statistic()
         return {"code": 0, "result": plugins, "statistic": statistic}
 
-    def get_runnings(self):
-        running_plugins = self.get_running_plugins()
-        
-        running_services = self.get_running_services()
-
-        runnings = running_plugins + running_services
-        runnings.sort(key=lambda item: item['next_run_time'])
-        
-        return runnings
-
     @staticmethod
-    def get_running_plugins():
-        plugins = PluginManager()._running_plugins
+    def get_running_services():
+        """
+        查询后台任务,包括内置服务和插件
+        """
         resp = []
-        for name, plugin in plugins.items():
+        for job in Scheduler().SCHEDULER.get_jobs():
+            next_run_time = job.next_run_time.strftime('%Y%m%d %H:%M:%S')
+            delta_time = deltatime2str(job.next_run_time,
+                                           datetime.now(tz=pytz.timezone(Config().get_timezone())))
+            resp.append({"id": job.id, "name": job.name, "next_run_time": next_run_time, "state": "运行中",
+                         "delta_time": delta_time, "type": "service"})
+
+        for name, plugin in PluginManager()._running_plugins.items():
             if not plugin.get_state():
                 continue
-            next_run_time, next_run_time_diff = plugin.get_next_run_time()
+            next_run_time, delta_time = plugin.get_next_run_time()
             if not next_run_time:
                 continue
-            resp.append({
-                "id": plugin.module_name,
-                "name": plugin.module_name,
-                "next_run_time": next_run_time,
-                "state": '运行中',
-                "next_run_time_diff": next_run_time_diff,
-                "type": "plugin"
-            })
+            resp.append({"id": plugin.module_name, "name": plugin.module_name, "next_run_time": next_run_time,
+                         "state": '运行中', "delta_time": delta_time, "type": "plugin"})
+        resp.sort(key=lambda item: item['next_run_time'])
         return resp
 
 

@@ -219,7 +219,7 @@ laboratory:
   # 《使用Cloudflare Worker搭建Telegram Bot Api 代理》https://www.yuque.com/u21363723/nt6hcz/whq99ankmn87arcq?singleDoc
   telegram_domain:
 monitor:
-  monitor_check_interval: 600
+  monitor_check_interval: 1800
 test: false
 ocr:
   custom_ocr_url: ''

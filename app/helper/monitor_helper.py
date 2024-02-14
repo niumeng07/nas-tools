@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.db import MainDb, DbPersist
 from app.db.models import MONITORHISTORY
@@ -29,3 +29,7 @@ class MonitorHelper:
                 SPACETOTAL = monitor_info['TotalSpace'],
                 FINISH_TIME = int(now.timestamp())
             ))
+        curr_hour = datetime.now().hour
+        data_date =  (datetime.now() - timedelta(days=3)).strftime('%Y%m%d')
+        if curr_hour == 4:  # 每天运行一次清理旧数据
+            self._db.query(MONITORHISTORY).filter(MONITORHISTORY.DATE <= data_date).delete()
