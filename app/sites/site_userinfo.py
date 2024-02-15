@@ -14,6 +14,7 @@ from app.message import Message
 from app.sites.sites import Sites
 from app.utils import RequestUtils, ExceptionUtils, StringUtils
 from app.utils.commons import singleton
+from app.sites.user_level import get_user_level
 from config import Config
 
 lock = Lock()
@@ -209,7 +210,7 @@ class SiteUserInfo(object):
                         site_name: {
                             "upload": site_user_info.upload,
                             "username": site_user_info.username,
-                            "user_level": site_user_info.user_level,
+                            "user_level": get_user_level(site_user_info.user_level),
                             "join_at": site_user_info.join_at,
                             "download": site_user_info.download,
                             "ratio": site_user_info.ratio,
@@ -435,7 +436,7 @@ class SiteUserInfo(object):
         for site in raw_statistics:
             statistics.append({"site": site.SITE,
                                "username": site.USERNAME,
-                               "user_level": site.USER_LEVEL,
+                               "user_level": get_user_level(site.USER_LEVEL),
                                "join_at": site.JOIN_AT,
                                "update_at": site.UPDATE_AT,
                                "upload": site.UPLOAD,
