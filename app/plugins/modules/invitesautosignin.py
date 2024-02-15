@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as es
 from selenium.webdriver.support.wait import WebDriverWait
 from apscheduler.triggers.cron import CronTrigger
 
+from app.db.models import PLUGINHISTORY
 from app.helper import ChromeHelper, SubmoduleHelper, SiteHelper
 from app.helper.cloudflare_helper import under_challenge
 from app.message import Message
@@ -184,7 +185,7 @@ class InvitesAutoSignIn(_IPluginModule):
           </div>
         """
         signin_history = self.get_history() or []
-        signin_history = [item[0] for item in signin_history]
+        signin_history = [item for item in signin_history]
 
         return "签到记录", Template(template).render(
             ResultsCount=len(signin_history), Results=signin_history), None
@@ -262,9 +263,6 @@ class InvitesAutoSignIn(_IPluginModule):
         sevenday_before = sevenday_before.strftime('%Y-%m-%d %H:%M:%S')
         # 删除昨天历史
         self.delete_history(sevenday_before)
-
-        # 读取历史记录
-        history = self.get_history() or []
 
         res = RequestUtils(cookies=self._cookie,
                            proxies=Config().get_proxies()).get_res(url="https://invites.fun")
@@ -352,15 +350,15 @@ class InvitesAutoSignIn(_IPluginModule):
                 text=f"累计签到 {totalContinuousCheckIn} \n"
                      f"剩余药丸 {money}")
 
-        history.append({
+        signin_result = {
             "date": datetime.today().strftime('%Y-%m-%d %H:%M:%S'),
             "results": "签到成功",
             "totalContinuousCheckIn": totalContinuousCheckIn,
             "money": money
-        })
+        }
 
         # 保存签到历史
-        self.history(key=today.strftime('%Y-%m-%d %H:%M:%S'), value=history)
+        self.history(key=today.strftime('%Y-%m-%d %H:%M:%S'), value=signin_result)
 
 
     def stop_service(self):
