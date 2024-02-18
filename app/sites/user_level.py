@@ -24,7 +24,7 @@ USER_LEVEL_ALIAS = {
     "叛徒": "Peasant",
     "平民": "User",
     "正兵": "Power User",
-    "军士": "EliteUse",
+    "军士": "Elite User",
     "副军校": "Crazy User",
     "正军校": "Insane User",
     "副参领": "Veteran User",
