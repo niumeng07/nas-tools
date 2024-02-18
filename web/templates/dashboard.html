@@ -113,7 +113,7 @@
     <div class="container-xl">
       <div class="modal-body py-0">
         <div class="col-md-12">
-          <div class="row align-items-center row-eq-height" , style="position: relative">
+          <div class="row row-cards align-items-center row-eq-height" , style="position: relative">
             <!-- 媒体库信息 -->
             <div class="col-lg-4">
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
@@ -212,7 +212,7 @@
     <div class="container-xl">
       <div class="modal-body py-0">
         <div class="col-md-12">
-          <div class="row align-items-center row-eq-height" style="position: relative">
+          <div class="row row-cards align-items-center row-eq-height" style="position: relative">
             <!-- CPU曲线,内存曲线 -->
             <div class="col-lg-4">
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
@@ -314,7 +314,7 @@
                           </a>
                         </div>
                         {% endif %}
-                        <div class="col">
+                        <div class="col-auto text-white">
                           <div class="h5 mb-0 me-2 d-flex align-items-center subheader">种子数</div>
                           <div class="h5 mb-0 me-2 d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}
                           </div>
@@ -323,8 +323,8 @@
                               style="float:left white-space:nowrap">打开</div>
                           </a>
                         </div>
-                        <div class="col-auto bg-indigo avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
-                        <div class="col">
+                        <div class="col-auto bg-green avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
+                        <div class="col-auto text-white">
                           <div class="d-flex align-items-center subheader white-space:nowrap">下载速度</div>
                           <div class="me-auto">
                             <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }}
@@ -335,7 +335,7 @@
                           </div>
                         </div>
                         <div class="col-auto bg-purple avatar text-white">{{ SVG.arrow_big_up_lines() }}</div>
-                        <div class="col">
+                        <div class="col-auto text-white">
                           <div class="d-flex align-items-center subheader" style="white-space:nowrap">上传速度</div>
                           <div class="me-auto">
                             <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }}
