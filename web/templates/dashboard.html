@@ -134,7 +134,7 @@
                         <div class="col-auto bg-pink avatar text-white">{{ SVG.movie() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader">电影</div>
-                          <div class="h1 mb-0 me-2" style="float:left">{{ MediaCount.Movie }}</div>
+                          <div class="h2 mb-0 me-2" style="float:left" id="movies_count">{{ MediaCount.Movie }}</div>
                         </div>
                       </div>
                     </div>
@@ -150,8 +150,8 @@
                           <div class="d-flex align-items-center subheader">电视剧/动漫</div>
                           <div class="me-auto">
                             <div>
-                              <div class="h2 mb-0 me-2" style="float:left">{{ MediaCount.Series }} </div>
-                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                              <div class="h2 mb-0 me-2" style="float:left" id="series_count">{{ MediaCount.Series }} </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right" id="episodes_count">{{
                                 MediaCount.Episodes }} 集
                               </div>
                             </div>
@@ -172,9 +172,9 @@
                           <div class="d-flex align-items-center subheader">音乐</div>
                           <div class="me-auto">
                             <div>
-                              <div class="h2 mb-0 me-2" style="float:left">{{ MediaCount.AlbumCount }}
+                              <div class="h2 mb-0 me-2" style="float:left" id="album_count">{{ MediaCount.AlbumCount }}
                               </div>
-                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right" id="song_count">{{
                                 MediaCount.SongCount }} 曲
                               </div>
                             </div>
@@ -577,12 +577,14 @@
       let MovieCount=ret.Movie;
       let SeriesCount=ret.Series;
       let EpisodesCount=ret.Episodes;
-      let MusicCount=ret.Music;
+      let AlbumCount=ret.AlbumCount;
+      let SongCount=ret.SongCount;
       let UserCount=ret.User;
       document.getElementById("movies_count").innerHTML = MovieCount;
       document.getElementById("series_count").innerHTML = SeriesCount;
       document.getElementById("episodes_count").innerHTML = EpisodesCount;
-      document.getElementById("music_count").innerHTML = MusicCount;
+      document.getElementById("album_count").innerHTML = AlbumCount;
+      document.getElementById("song_count").innerHTML = SongCount;
       document.getElementById("user_count").innerHTML = UserCount;
     });
   }
