@@ -144,7 +144,7 @@ class Plex(_IMediaClient):
         if not self._plex:
             return {}
         sections = self._plex.library.sections()
-        MovieCount = SeriesCount = SongCount = EpisodeCount = 0
+        MovieCount = SeriesCount = SongCount = AlbumCount = EpisodeCount = 0
         for sec in sections:
             if sec.type == "movie":
                 MovieCount += sec.totalSize
@@ -152,11 +152,13 @@ class Plex(_IMediaClient):
                 SeriesCount += sec.totalSize
                 EpisodeCount += sec.totalViewSize(libtype='episode')
             if sec.type == "artist":
-                SongCount += sec.totalSize
+                AlbumCount += sec.totalSize
+                SongCount += sec.totalViewSize(libtype='track')
         return {
             "MovieCount": MovieCount,
             "SeriesCount": SeriesCount,
             "SongCount": SongCount,
+            "AlbumCount": AlbumCount,
             "EpisodeCount": EpisodeCount
         }
 

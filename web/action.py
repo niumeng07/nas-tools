@@ -3499,7 +3499,8 @@ class WebAction:
                 "Series": "{:,}".format(media_counts.get('SeriesCount')),
                 "Episodes": "{:,}".format(media_counts.get('EpisodeCount')) if media_counts.get(
                     'EpisodeCount') else "",
-                "Music": "{:,}".format(media_counts.get('SongCount')),
+                "AlbumCount": "{:,}".format(media_counts.get('AlbumCount')),
+                "SongCount": "{:,}".format(media_counts.get('SongCount')),
                 "User": UserCount
             }
         else:

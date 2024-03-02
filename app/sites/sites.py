@@ -281,6 +281,9 @@ class Sites:
             site_url = site_url + '/index.php'
         elif 'star-space' in site_url:
             site_url = site_url + '/attendance.php'
+        elif 'zhuque' in site_url:
+            site_url = site_url + '/index'
+        # hdvideo,zhuque
 
         chrome = ChromeHelper()
         if site_info.get("chrome") and chrome.get_status():

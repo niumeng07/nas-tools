@@ -89,7 +89,7 @@
                   <div class="d-flex align-items-center subheader">用户数</div>
                   <div class="me-auto">
                     <div>
-                      <div class="h1 mb-0 me-2" style="float:left">{{ UserCount }}</div>
+                      <div class="h1 mb-0 me-2" style="float:left" id="user_count">{{ UserCount }}</div>
                     </div>
                     <div style="clear:both"></div>
                   </div>
@@ -121,7 +121,10 @@
                   <h3 class="card-title">
                     媒体库信息
                   </h3>
-                  <div class="card-actions btn-actions">
+                  <div class="ms-auto">
+                    <a href="javascript:refresh_library_mediacount()" class="btn-icon">
+                      {{ SVG.refresh() }}
+                    </a>
                   </div>
                 </div>
                 <div class="card-body border-0">
@@ -131,7 +134,7 @@
                         <div class="col-auto bg-pink avatar text-white">{{ SVG.movie() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader">电影</div>
-                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ MediaCount.Movie }}</div>
+                          <div class="h1 mb-0 me-2" style="float:left">{{ MediaCount.Movie }}</div>
                         </div>
                       </div>
                     </div>
@@ -147,9 +150,10 @@
                           <div class="d-flex align-items-center subheader">电视剧/动漫</div>
                           <div class="me-auto">
                             <div>
-                              <div class="h1 mb-0 me-2" style="float:left">{{ MediaCount.Series }} </div>
+                              <div class="h2 mb-0 me-2" style="float:left">{{ MediaCount.Series }} </div>
                               <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
-                                MediaCount.Episodes }}</div>
+                                MediaCount.Episodes }} 集
+                              </div>
                             </div>
                             <div style="clear:both"></div>
                           </div>
@@ -166,7 +170,15 @@
                         <div class="col-auto bg-lime avatar text-white">{{ SVG.music() }}</div>
                         <div class="col">
                           <div class="d-flex align-items-center subheader">音乐</div>
-                          <div class="d-flex align-items-baseline h2 mb-0 me-2">{{ MediaCount.Music }}
+                          <div class="me-auto">
+                            <div>
+                              <div class="h2 mb-0 me-2" style="float:left">{{ MediaCount.AlbumCount }}
+                              </div>
+                              <div class="h3 text-muted d-inline-flex align-items-center lh-1" style="float:right">{{
+                                MediaCount.SongCount }} 曲
+                              </div>
+                            </div>
+                            <div style="clear:both"></div>
                           </div>
                         </div>
                       </div>
@@ -238,13 +250,18 @@
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
                 <div class="card-header">
                   <h3 class="card-title">后台任务</h3>
-                  <div class="ms-auto">
+                  <div class="ms-3">
                     <a href="javascript:show_bg_runnings()" class="btn-icon">
                       {{ SVG.details() }}
                     </a>
                   </div>
-                  <div class="ms-3 text-muted">
+                  <div class="ms-1 text-muted">
                     共 {{ BackgroundJobsCount }} 条记录
+                  </div>
+                  <div class="ms-auto">
+                    <a href="javascript:refresh_tasks_monitor()" class="btn-icon">
+                      {{ SVG.refresh() }}
+                    </a>
                   </div>
                 </div>
                 <div id="table-background-tasks" class="table-responsive">
@@ -288,7 +305,6 @@
                 </div>
               </div>
             </div>
-            <!--单个下载器信息-->
             <div class="col-lg-4">
               <div class="card border-0 card-link-pop p0 overflow-hidden rounded-3" style="height: 330px">
                 <div class="card-header">
@@ -296,60 +312,54 @@
                     下载器信息
                   </h3>
                 </div>
-                <div class="card-body border-0">
-                  <dl class="row row-eq-height">
-                    {% for Name, Info in DownloaderInfo.items() %}
-                    <div class="card-body border-0">
-                      <div class="row align-items-center">
-                        {% if Name == "qBitTorrent" %}
-                        <div class="col-auto bg-blue avatar text-white">
-                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                            {{ SVG.qbittorrent() }}
-                          </a>
-                        </div>
-                        {% else %}
-                        <div class="col-auto bg-red avatar text-white">
-                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                            {{ SVG.transmission() }}
-                          </a>
-                        </div>
-                        {% endif %}
-                        <div class="col-auto text-white">
-                          <div class="h5 mb-0 me-2 d-flex align-items-center subheader">种子数</div>
-                          <div class="h5 mb-0 me-2 d-flex align-items-baseline h2 mb-0 me-2">{{ Info.torrent_count }}
+                <div id="downloader-statistic-data" class="table-responsive">
+                  <table class="table table-vcenter card-table table-hover" id="table-downloader_info">
+                    <thead>
+                      <tr>
+                        <th class="flex-fill">下载器</th>
+                        <th>种子数</th>
+                        <th>上传</th>
+                        <th>下载</th>
+                      </tr>
+                    </thead>
+                    <tbody class="table-tbody">
+                      {% for Name, Info in DownloaderInfo.items() %}
+                      <tr>
+                        <td class="sort-name" style="border:none">
+                          {% if Name == "qBitTorrent" %}
+                          <div class="col-auto bg-blue avatar text-white">
+                            <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
+                              {{ SVG.qbittorrent() }}
+                            </a>
                           </div>
-                          <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                            <div class="h5 mb-0 me-2 text-blue d-inline-flex lh-1"
-                              style="float:left white-space:nowrap">打开</div>
-                          </a>
-                        </div>
-                        <div class="col-auto bg-green avatar text-white">{{ SVG.arrow_big_down_lines() }}</div>
-                        <div class="col-auto text-white">
-                          <div class="d-flex align-items-center subheader white-space:nowrap">下载速度</div>
-                          <div class="me-auto">
-                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }}
-                            </div>
-                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1"
-                              style="float:left white-space:nowrap">{{
-                              Info.download_rate_limit }}</div>
+                          {% else %}
+                          <div class="col-auto bg-red avatar text-white">
+                            <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
+                              {{ SVG.transmission() }}
+                            </a>
                           </div>
-                        </div>
-                        <div class="col-auto bg-purple avatar text-white">{{ SVG.arrow_big_up_lines() }}</div>
-                        <div class="col-auto text-white">
-                          <div class="d-flex align-items-center subheader" style="white-space:nowrap">上传速度</div>
-                          <div class="me-auto">
-                            <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }}
-                            </div>
-                            <div class="h5 mb-0 me-2 text-muted d-inline-flex lh-1"
-                              style="float:left white-space:nowrap">{{
-                              Info.upload_rate_limit }}</div>
-                            <div style="clear:both"></div>
+                          {% endif %}
+                        </td>
+                        <td class="sort-name" style="border:none">{{ Info.torrent_count }}</td>
+                        <td style="border:none">
+                          <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.upload_speed }}
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                    {% endfor %}
-                  </dl>
+                          <div class="h6 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">
+                            {{
+                            Info.upload_rate_limit }}</div>
+                          <div style="clear:both"></div>
+                        </td>
+                        <td style="border:none">
+                          <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">{{ Info.download_speed }}
+                          </div>
+                          <div class="h6 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">
+                            {{
+                            Info.download_rate_limit }}</div>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -561,6 +571,24 @@
 </script>
 
 <script type="text/javascript">
+  refresh_library_mediacount();
+  function refresh_library_mediacount() {
+    ajax_post("get_library_mediacount", {}, function (ret) {
+      let MovieCount=ret.Movie;
+      let SeriesCount=ret.Series;
+      let EpisodesCount=ret.Episodes;
+      let MusicCount=ret.Music;
+      let UserCount=ret.User;
+      document.getElementById("movies_count").innerHTML = MovieCount;
+      document.getElementById("series_count").innerHTML = SeriesCount;
+      document.getElementById("episodes_count").innerHTML = EpisodesCount;
+      document.getElementById("music_count").innerHTML = MusicCount;
+      document.getElementById("user_count").innerHTML = UserCount;
+    });
+  }
+</script>
+
+<script type="text/javascript">
   func_system_statics("get_history_cpu_statics", "cpu_history_statics", "CPU %", "#E9A139");
   func_system_statics("get_history_memory_statics", "memory_history_statics", "内存 %", "#AFABFF");
   chart_sys_stats = new Map([])
@@ -693,5 +721,13 @@
   function refresh_sys_monitor() {
     func_system_statics("get_history_cpu_statics", "cpu_history_statics", "CPU %", "#E9A139");
     func_system_statics("get_history_memory_statics", "memory_history_statics", "内存 %", "#AFABFF");
+  }
+</script>
+
+<script type="text/javascript">
+  function refresh_tasks_monitor() {
+    ajax_post("get_running_services", {}, function (ret) {
+      let BackgroundRunnings=ret;
+    });
   }
 </script>
