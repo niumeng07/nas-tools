@@ -87,7 +87,8 @@ class Transmission(_IDownloadClient):
                 "upload_size": info.current_stats.uploaded_bytes,
                 "torrent_count": info.torrent_count,
                 "host": self.host,
-                "port": self.port
+                "port": self.port,
+                "downloader_type": "TR"
             }
         except Exception as err:
             log.error(f"获取信息出错: {str(err)}")
