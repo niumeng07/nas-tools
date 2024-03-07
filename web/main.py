@@ -325,7 +325,7 @@ def dashboard():
         ServerSucess = False
 
     # 下载器信息
-    DownloaderInfo = Downloader().downloader_statics()
+    DownloaderInfo = WebAction().get_downloader_statistics()
 
     # 后台任务(含插件)
     BackgroundRunnings = WebAction().get_running_services()

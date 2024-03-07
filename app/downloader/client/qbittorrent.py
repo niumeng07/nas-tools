@@ -35,7 +35,7 @@ class Qbittorrent(_IDownloadClient):
     def get_torrents_count(self):
         return len(self.qbc.torrents_info())
 
-    def downloader_statics(self):
+    def downloader_statistics(self):
         if not self.qbc:
             log.error(f"下载器未初始化")
             return None

@@ -219,7 +219,6 @@
   </div>
   {% endif %}
 
-  {% if ServerSucess %}
   <div class="page-body">
     <div class="container-xl">
       <div class="modal-body py-0">
@@ -311,6 +310,11 @@
                   <h3 class="card-title">
                     下载器信息
                   </h3>
+                  <div class="ms-auto">
+                    <a href="javascript:refresh_downloader_statistics()" class="btn-icon">
+                      {{ SVG.refresh() }}
+                    </a>
+                  </div>
                 </div>
                 <div id="downloader-statistic-data" class="table-responsive">
                   <table class="table table-vcenter card-table table-hover" id="table-downloader_info">
@@ -422,7 +426,6 @@
       </div>
     </div>
   </div>
-  {% endif %}
 </body>
 
 <script type="text/javascript">
@@ -586,6 +589,34 @@
       document.getElementById("album_count").innerHTML = AlbumCount;
       document.getElementById("song_count").innerHTML = SongCount;
       document.getElementById("user_count").innerHTML = UserCount;
+    });
+  }
+</script>
+
+<script type="text/javascript">
+  refresh_downloader_statistics();
+  
+  function refresh_downloader_statistics() {
+    ajax_post("get_downloader_statistics", {}, function (ret) {
+      let response = ret;
+      var trHTML = '<thead><tr><th class="flex-fill">下载器</th><th>种子数</th><th>上传</th><th>下载</th></tr></thead>';
+      trHTML += '<tbody class="table-tbody">';
+
+      for (var downloaderName in response) {
+        if (response.hasOwnProperty(downloaderName)) {
+          var downloaderData = response[downloaderName];
+          trHTML += '<tr>';
+          trHTML = trHTML + '<td class="sort-name" style="border:none">' + downloaderName + '</td>';
+          trHTML = trHTML + '<td class="sort-name" style="border:none">' + downloaderData.torrent_count + '</td>';
+          trHTML = trHTML + '<td style="border:none">' + downloaderData.upload_speed + '</td>';
+          trHTML = trHTML + '<td style="border:none">' + downloaderData.download_speed + '</td>';
+          trHTML += '</tr>';
+        }
+      }
+      trHTML += '</tbody>';
+      // alert(trHTML);
+      // Set the HTML content of the table directly
+      document.getElementById("table-downloader_info").innerHTML = trHTML;
     });
   }
 </script>

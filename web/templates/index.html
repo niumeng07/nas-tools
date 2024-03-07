@@ -1,5 +1,9 @@
 {% import 'macro/svg.html' as SVG %}
 {% import 'macro/oops.html' as OOPS %}
+<head>
+  <link href="../static/css/style.css" rel="stylesheet"/>
+</head>
+
 <div class="container-xl">
   <!-- Page title -->
   <div class="page-header d-print-none">
@@ -7,7 +11,7 @@
       {% for item in LibraryManageConf %}
         {% if item['name'] == '我的媒体库' and item['selected'] %}
           <div class="col">
-            <h2 class="page-title">
+            <h2 class="page-title-stroke">
               我的媒体库
             </h2>
           </div>
@@ -91,7 +95,7 @@
   <div class="page-header d-print-none">
     <div class="row align-items-center">
       <div class="col">
-        <h2 class="page-title">
+        <h2 class="page-title-stroke">
           正在观看
         </h2>
       </div>
@@ -142,7 +146,7 @@
   <div class="page-header d-print-none">
     <div class="row align-items-center">
       <div class="col">
-        <h2 class="page-title">
+        <h2 class="page-title-stroke">
           <div>最新入库{{item['name']}}</div>
         </h2>
       </div>

@@ -242,6 +242,7 @@ class WebAction:
             "uninstall_plugin": self.uninstall_plugin,
             "get_plugin_apps": self.get_plugin_apps,
             "get_running_services": self.get_running_services,
+            "get_downloader_statistics": self.get_downloader_statistics,
             "get_plugin_page": self.get_plugin_page,
             "get_plugin_state": self.get_plugin_state,
             "get_plugins_conf": self.get_plugins_conf,
@@ -5221,6 +5222,10 @@ class WebAction:
         plugins = PluginManager().get_plugin_apps(current_user.level)
         statistic = PluginHelper.statistic()
         return {"code": 0, "result": plugins, "statistic": statistic}
+
+    @staticmethod
+    def get_downloader_statistics():
+        return Downloader().get_downloader_statistics()
 
     @staticmethod
     def get_running_services():

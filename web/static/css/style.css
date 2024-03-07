@@ -746,3 +746,11 @@ LI.directory a.selected {
     width: 28px;
     height: 28px;
 }
+
+.theme-dark .page-title-stroke {
+    -webkit-text-stroke:1px #666666;
+}
+
+.theme-light .page-title-stroke {
+    -webkit-text-stroke:1px #AAAAAA;
+}

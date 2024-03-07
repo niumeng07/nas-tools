@@ -68,7 +68,7 @@ class Transmission(_IDownloadClient):
             return self.trc
         return None
 
-    def downloader_statics(self):
+    def downloader_statistics(self):
         if not self.trc:
             log.error(f"下载器未初始化")
             return None

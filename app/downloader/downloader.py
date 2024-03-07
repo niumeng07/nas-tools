@@ -197,7 +197,7 @@ class Downloader:
         return default_download_setting_id
 
 
-    def downloader_statics(self):
+    def get_downloader_statistics(self):
         downloader_ids = self._downloader_ids
         DownloaderInfo = {}
         for downloader_id in downloader_ids:
@@ -212,9 +212,10 @@ class Downloader:
                 _client = self.__get_client(downloader_id)
                 if not _client:
                     continue
-                info = _client.downloader_statics()
+                statistics = _client.downloader_statistics()
     
-                DownloaderInfo[name] = info
+                if statistics:
+                    DownloaderInfo[name] = statistics
         return DownloaderInfo
 
 
