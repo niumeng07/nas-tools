@@ -63,7 +63,7 @@ class Scheduler:
                 if monitor_check_interval and int(monitor_check_interval) < 60:
                     monitor_check_interval = 600
                 self.SCHEDULER.add_job(Monitor().monitor, 'interval', name='后台监控', seconds=monitor_check_interval)
-                log.error("后台监控服务启动")
+                log.info("后台监控服务启动")
 
         if self._pt:
             # 数据统计

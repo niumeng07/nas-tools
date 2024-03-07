@@ -605,11 +605,18 @@
       for (var downloaderName in response) {
         if (response.hasOwnProperty(downloaderName)) {
           var downloaderData = response[downloaderName];
+          var logoSVG = SVG.transmission();
+          if (downloaderData.downloader_type == "QB") {
+            logoSVG = SVG.qbittorrent();
+          } else if (downloaderData.downloader_type == "TR") {
+            logoSVG = SVG.transmission();
+          }
+
           trHTML += '<tr>';
-          trHTML = trHTML + '<td class="sort-name" style="border:none">' + downloaderName + '</td>';
+          trHTML = trHTML + '<td class="sort-name" style="border:none"> <div class="col-auto bg-blue avatar text-white"> <a href="http://' + downloaderData.host + ':' + downloaderData.port + '" target="_blank">' + logoSVG + '</a> </div> </td>';
           trHTML = trHTML + '<td class="sort-name" style="border:none">' + downloaderData.torrent_count + '</td>';
-          trHTML = trHTML + '<td style="border:none">' + downloaderData.upload_speed + '</td>';
-          trHTML = trHTML + '<td style="border:none">' + downloaderData.download_speed + '</td>';
+          trHTML = trHTML + '<td style="border:none"> <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">' + downloadData.upload_speed + '</div> <div class="h6 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap">' + downloadData.upload_rate_limit + '</div> <div style="clear:both"></div> </td>'
+          trHTML = trHTML + '<td style="border:none"> <div class="h5 mb-0 me-2" style="float:left white-space:nowrap">' + Info.download_speed + '</div> <div class="h6 mb-0 me-2 text-muted d-inline-flex lh-1" style="float:left white-space:nowrap"> ' + Info.download_rate_limit + '</div> </td>'
           trHTML += '</tr>';
         }
       }

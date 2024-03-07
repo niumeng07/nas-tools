@@ -122,11 +122,11 @@ media:
 # 配置Emby服务器信息
 emby:
   # 【Emby服务器IP地址和端口】：注意区分http和https，http时可以不加http://，https时必须加https://
-  host: http://127.0.0.1:8096
+  host: http://192.168.3.118:8096
   # 【Emby ApiKey】：在Emby设置->高级->API密钥处生成，注意不要复制到了应用名称
-  api_key:
+  api_key: 32ab28b4901247b5a3e1a1186573e7f5
   # 【Emby媒体播放地址和端口】：播放设备的访问地址，注意区分http和https，http时可以不加http://，https时必须加https://
-  play_host: http://127.0.0.1:8096
+  play_host: http://192.168.3.118:8096
 
 # 配置Jellyfin服务器信息
 jellyfin:

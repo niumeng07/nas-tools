@@ -365,7 +365,8 @@ class Plex(_IMediaClient):
                     library_type = MediaType.ARTIST.value
                     image_list_str = self.get_libraries_image(library.title)
                 case _:
-                    continue
+                    library_type = MediaType.UNKNOWN.value
+                    image_list_str = self.get_libraries_image(library.title)
             libraries.append({
                 "id": library.key,
                 "name": library.title,

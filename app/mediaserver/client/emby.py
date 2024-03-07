@@ -580,8 +580,11 @@ class Emby(_IMediaClient):
                     library_type = MediaType.MOVIE.value
                 case "tvshows":
                     library_type = MediaType.TV.value
+                case "music":
+                    library_type = MediaType.ARTIST.value
                 case _:
-                    continue
+                    library_type = MediaType.UNKNOWN.value
+
             image = self.get_local_image_by_id(library.get("Id"), remote=False, inner=True)
             libraries.append({
                 "id": library.get("Id"),

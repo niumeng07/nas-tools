@@ -293,6 +293,8 @@ def index():
 
     # 最近添加
     Latests = MediaServer().get_latest()
+    for key, value in Latests.items():
+        print(key, value)
 
     return render_template("index.html",
                            ServerSucess=ServerSucess,

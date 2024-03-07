@@ -59,7 +59,6 @@
   <div class="container-xl">
     <div class="d-grid gap-3 grid-larger-card">
       {% for Library in Librarys %}
-        {% if LibrarySyncConf and Library.id|string in LibrarySyncConf %}
         {% set theLibLink = Library.link %}
           {% if "127.0.0.1" in theLibLink[0:16] %}
             {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
@@ -80,7 +79,6 @@
               {{ Library.name }}
             </div>
           </a>
-        {% endif %}
       {% endfor %}
     </div>
   </div>
@@ -139,15 +137,14 @@
 {% endfor %}
 {% endif %}
 
-{% for item in LibraryManageConf %}
-{% if item['name'] != '正在观看' and item['name'] != '我的媒体库' %}
 {% if Latests %}
+{% for Id, Attr in Latests.items() %}
 <div class="container-xl">
   <div class="page-header d-print-none">
     <div class="row align-items-center">
       <div class="col">
         <h2 class="page-title-stroke">
-          <div>最新入库{{item['name']}}</div>
+          <div>最新入库{{Id}}</div>
         </h2>
       </div>
     </div>
@@ -156,7 +153,7 @@
 <div class="page-body">
   <div class="container-xl">
     <div class="d-grid gap-3 grid-media-card align-items-start">
-      {% for Latest in Latests[item['name']] %}
+      {% for Latest in Attr %}
       {% set theLibLink = Latest.link %}
         {% if "127.0.0.1" in theLibLink[0:16] %}
           {% set theLibLink = theLibLink|replace("127.0.0.1",curdomainleft,1) %}
@@ -178,11 +175,8 @@
     </div>
   </div>
 </div>
-{% endif %}
-{% endif %}
-
 {% endfor %}
-
+{% endif %}
 
 {% endwith %}
 {% else %}
