@@ -55,7 +55,40 @@ class Qbittorrent(_IDownloadClient):
                 "torrent_count": self.get_torrents_count(),
                 "host": self.host,
                 "port": self.port,
-                "downloader_type": "QB"
+                "downloader_type": "QB",
+                "logo": """
+<svg viewBox="0 0 48.00 48.00" id="b" xmlns="http://www.w3.org/2000/svg" fill="#000000" stroke="#000000" stroke-width="3.6480000000000006">
+  <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+  <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+  <g id="SVGRepo_iconCarrier">
+    <defs>
+      <style>
+        .c {
+          fill: none;
+          stroke: #FFFFFF;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+      </style>
+    </defs>
+    <circle class="c" cx="24" cy="24" r="21.5"></circle>
+    <g>
+      <g>
+        <path class="c"
+          d="m26.6511,22.3638c0-2.7805,2.254-5.0345,5.0345-5.0345h0c2.7805,0,5.0345,2.254,5.0345,5.0345v3.2724c0,2.7805-2.254,5.0345-5.0345,5.0345h0c-2.7805,0-5.0345-2.254-5.0345-5.0345">
+        </path>
+        <line class="c" x1="26.6511" y1="30.6707" x2="26.6511" y2="10.5327"></line>
+      </g>
+      <g>
+        <path class="c"
+          d="m21.3489,25.6362c0,2.7805-2.254,5.0345-5.0345,5.0345h0c-2.7805,0-5.0345-2.254-5.0345-5.0345v-3.2724c0-2.7805,2.254-5.0345,5.0345-5.0345h0c2.7805,0,5.0345,2.254,5.0345,5.0345">
+        </path>
+        <line class="c" x1="21.3489" y1="17.3293" x2="21.3489" y2="37.4673"></line>
+      </g>
+    </g>
+  </g>
+</svg>
+                """
             }
         except Exception as err:
             log.error(f"获取传输信息出错: {str(err)}")

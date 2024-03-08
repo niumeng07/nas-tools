@@ -330,19 +330,11 @@
                       {% for Name, Info in DownloaderInfo.items() %}
                       <tr>
                         <td class="sort-name" style="border:none">
-                          {% if Name == "qBitTorrent" %}
                           <div class="col-auto bg-blue avatar text-white">
                             <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                              {{ SVG.qbittorrent() }}
+                              {{ Info.logo }}
                             </a>
                           </div>
-                          {% else %}
-                          <div class="col-auto bg-red avatar text-white">
-                            <a href="http://{{ Info.host }}:{{ Info.port }}" target="_blank">
-                              {{ SVG.transmission() }}
-                            </a>
-                          </div>
-                          {% endif %}
                         </td>
                         <td class="sort-name" style="border:none">{{ Info.torrent_count }}</td>
                         <td style="border:none">
