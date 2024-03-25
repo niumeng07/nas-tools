@@ -49,7 +49,7 @@ body, .page {
 }
 
 .theme-dark .form-check-input:not(:checked), .theme-dark .form-control, .theme-dark .form-file-text, .theme-dark .form-select, .theme-dark .form-selectgroup-check {
-    background-color: rgba(29, 39, 59, 0.2);
+    background-color: rgba(69, 69, 99, 0.2);
     border: 0 !important;
 }
 
