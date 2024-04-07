@@ -325,6 +325,7 @@ class ProUser(UserMixin):
                     siteid=None,
                     cookie=None,
                     ua=None,
+                    apikey=None,
                     name=None,
                     rule=None,
                     pri=None,
@@ -363,6 +364,7 @@ class ProUser(UserMixin):
                            public=public,
                            proxy=proxy,
                            ua=ua,
+                           apikey=apikey,
                            render=render,
                            pri=pri)
 
