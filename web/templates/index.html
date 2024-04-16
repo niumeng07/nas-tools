@@ -57,7 +57,7 @@
 {% if item['name'] == '我的媒体库' and item['selected'] %}
 <div class="page-body">
   <div class="container-xl">
-    <div class="d-grid gap-3 grid-larger-card">
+    <div class="d-grid gap-3 grid-normal-card">
       {% for Library in Librarys %}
         {% set theLibLink = Library.link %}
           {% if "127.0.0.1" in theLibLink[0:16] %}
