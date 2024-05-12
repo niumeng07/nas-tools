@@ -106,6 +106,8 @@ class SiteSchema(Enum):
     FileList = "FileList"
     TNode = "TNode"
     MTeamTorrent = "MTeamTorrent"
+    NexusAudiences = "NexusAudiences"
+    NexusHhanclub = "NexusHhanclub"
 
 
 # 可监听事件
